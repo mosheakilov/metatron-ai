@@ -1,0 +1,52 @@
+# METATRON — single config for training and outreach.
+# Same config + same data file => same metrics (see docs/README "Reproducibility").
+
+seed: 42
+
+data:
+  raw_path: data/raw/sellers.csv       # produced by `python -m metatron.data.generate`
+  n_rows: 5000
+  min_rows: 500                        # contract: fewer rows => flow stops
+  target: agreed_to_meeting
+  target_rate_range: [0.05, 0.60]      # contract: target balance must fall in this range
+
+model:
+  test_size: 0.2
+  cv_folds: 5
+  top_fraction: 0.2                    # Precision@20%: broker contacts only the top 20%
+  versions:
+    v1:
+      kind: logistic_regression
+      params: {C: 1.0, max_iter: 1000}
+    v2:
+      kind: gradient_boosting
+      params: {n_estimators: 300, learning_rate: 0.05, max_depth: 3}
+  select_by: pr_auc
+
+runs_dir: runs
+
+llm:
+  # auto: run CrewAI agents when ANTHROPIC_API_KEY is set, otherwise deterministic offline mode.
+  # offline: never call an LLM (CI, tests). crew: require the LLM.
+  mode: auto
+  models:
+    smart: anthropic/claude-sonnet-5-5
+    fast: anthropic/claude-haiku-5-5
+
+outreach:
+  db_path: var/metatron.db
+  broker_name: ""                      # fill in: signed at the end of every message
+  office_name: "METATRON נדל\"ן"
+  channel: simulation                  # simulation | whatsapp
+  allowed_numbers: []                  # whatsapp mode sends ONLY to these numbers (demo safety)
+  template_name: seller_outreach       # approved Meta template for the first message
+  template_language: he
+
+calendar:
+  backend: local                       # local | nadlan_pro (optional: also writes users/{uid}/tasks)
+  nadlan_pro_uid: ""
+  slots:
+    days_ahead: 7
+    weekdays: [0, 1, 2, 3, 6]          # Mon-Thu + Sun (Python weekday numbers)
+    hours: [10, 13, 17]
+    duration_minutes: 45
