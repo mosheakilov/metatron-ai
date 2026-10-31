@@ -12,7 +12,7 @@ from metatron.pipeline import Run
 def build_data_crew(run: Run) -> Crew:
     cfg = run.cfg
     smart, fast = get_llm(cfg, "smart"), get_llm(cfg, "fast")
-    read = ReadArtifactTool(run=run)
+    read = ReadArtifactTool(workspace=run)
 
     cleaner = Agent(
         role="Data Cleaner",

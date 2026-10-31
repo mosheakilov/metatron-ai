@@ -28,15 +28,15 @@ class _NoArgs(BaseModel):
 class RunTool(BaseTool):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     args_schema: type[BaseModel] = _NoArgs
-    run: Run = Field(exclude=True)
+    workspace: Run = Field(exclude=True)
     step: str = Field(exclude=True)
 
     def _run(self, **_: Any) -> str:
-        return _short(getattr(self.run, self.step)())
+        return _short(getattr(self.workspace, self.step)())
 
 
 def step_tool(run: Run, step: str, name: str, description: str) -> RunTool:
-    return RunTool(run=run, step=step, name=name, description=description)
+    return RunTool(workspace=run, step=step, name=name, description=description)
 
 
 class _ReadArgs(BaseModel):
@@ -52,11 +52,11 @@ class ReadArtifactTool(BaseTool):
                         "eda/summary.json, data_contract.json, validation_report.json, "
                         "metrics.json, run.json.")
     args_schema: type[BaseModel] = _ReadArgs
-    run: Run = Field(exclude=True)
+    workspace: Run = Field(exclude=True)
 
     def _run(self, artifact: str) -> str:
-        path = (self.run.dir / artifact).resolve()
-        if self.run.dir.resolve() not in path.parents or not path.is_file():
+        path = (self.workspace.dir / artifact).resolve()
+        if self.workspace.dir.resolve() not in path.parents or not path.is_file():
             return f"artifact not found: {artifact}"
         if path.suffix not in {".json", ".md"}:
             return "only .json and .md artifacts can be read"

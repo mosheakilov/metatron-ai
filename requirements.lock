@@ -7,6 +7,7 @@ aiosqlite==0.21.0
 altair==6.3.0
 annotated-doc==0.0.5
 annotated-types==0.8.0
+anthropic==0.73.0
 anyio==4.15.1
 appdirs==1.4.4
 attrs==26.1.0

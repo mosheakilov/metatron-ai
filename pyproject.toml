@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "METATRON: one end-to-end seller-recruitment flow with CrewAI"
 requires-python = ">=3.12"
 dependencies = [
-    "crewai>=0.100",
+    "crewai[anthropic]>=1.15",
     "pandas>=2.2",
     "numpy>=1.26",
     "scikit-learn>=1.5",
