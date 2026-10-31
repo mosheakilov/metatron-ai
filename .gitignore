@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Secrets
+.env
+*.service-account.json
+secrets/
+
+# Generated
+runs/
+data/raw/*
+!data/raw/.gitkeep
+var/
+
+# Obsidian workspace state
+docs/.obsidian/workspace*.json
+
+# OS
+Thumbs.db
+.DS_Store

@@ -1,0 +1,270 @@
+<title>METATRON AI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one A4 sheet. Navy masthead → two columns (story right, system left) → roadmap rail → gold "ask" band. Single light theme on purpose: it's a printed approval document. */
+:root{
+  --ink:#0b1437;        /* navy: brand, headings */
+  --ink-2:#36405e;      /* body text */
+  --mute:#6b7391;       /* captions */
+  --line:#dfe3ee;       /* hairlines */
+  --paper:#ffffff;      /* sheet */
+  --wash:#f3f5fa;       /* tinted panels, blue-biased neutral */
+  --gold:#f5b301;       /* single accent */
+  --gold-wash:#fff6d6;
+  --ai:#2f5bea;         /* AI-performed step */
+  --human:#5b6478;      /* human-performed step */
+  --font:"Heebo","Segoe UI","Arial",sans-serif;
+  --mono:"IBM Plex Mono",Consolas,monospace;
+  color-scheme:light;
+}
+@page{size:A4;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{background:#e6e9f2;color:var(--ink-2);font-family:var(--font);overflow-x:hidden;
+  padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet{direction:rtl;background:var(--paper);width:210mm;height:297mm;overflow:hidden;margin:0 auto;
+  box-shadow:0 10px 40px rgba(11,20,55,.14);display:flex;flex-direction:column;font-size:8.7pt;line-height:1.5}
+.sheet>*{flex-shrink:0}
+@media print{
+  body{background:var(--paper);padding:0}
+  .sheet{box-shadow:none;zoom:1!important}
+}
+h1,h2,h3{color:var(--ink);margin:0;text-wrap:balance}
+p{margin:0}
+.label{font-family:var(--mono);font-size:6.6pt;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);direction:ltr;unicode-bidi:isolate}
+
+/* masthead */
+.mast{background:var(--ink);color:#fff;padding:7mm 12mm 5.5mm;position:relative;overflow:hidden}
+.mast::after{content:"";position:absolute;left:-34mm;top:-44mm;width:70mm;height:70mm;border-radius:50%;
+  border:1.2px solid rgba(245,179,1,.35);box-shadow:0 0 0 9mm rgba(245,179,1,.06),0 0 0 18mm rgba(245,179,1,.04)}
+.mast-top{display:flex;justify-content:space-between;align-items:center;gap:4mm;position:relative;z-index:1}
+.brand{font-weight:900;font-size:25pt;letter-spacing:.06em;color:var(--gold);direction:ltr;line-height:1}
+.status{font-size:7.4pt;font-weight:700;color:var(--ink);background:var(--gold);padding:1.2mm 3mm;border-radius:10mm;white-space:nowrap}
+.tagline{font-size:15pt;font-weight:800;color:#fff;margin-top:2.5mm;position:relative;z-index:1}
+.lede{color:#c9cfe2;font-size:9pt;max-width:160mm;margin-top:1.5mm;position:relative;z-index:1}
+
+/* body */
+.main{display:grid;grid-template-columns:1.05fr 1fr;gap:7mm;padding:5mm 12mm 3mm}
+.col{display:flex;flex-direction:column;gap:3.6mm;min-width:0}
+.sec{display:flex;flex-direction:column;gap:2mm}
+.sec h2{font-size:11.5pt;font-weight:800}
+.sec h2 small{font-weight:500;color:var(--mute);font-size:8pt;margin-inline-start:2mm}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:3mm}
+.who{background:var(--wash);border-radius:2.5mm;padding:2.4mm 3mm}
+.who h3{font-size:9pt;display:flex;align-items:center;gap:1.8mm;margin-bottom:1.2mm}
+.who ul{margin:0;padding-inline-start:4mm;font-size:8.1pt}
+.who li{margin-bottom:.5mm}
+.sw{width:2.6mm;height:2.6mm;border-radius:.8mm;display:inline-block;flex:none}
+.sw.ai{background:var(--ai)} .sw.hu{background:transparent;border:1.5px solid var(--human)}
+
+/* flow rails */
+.rail{display:flex;flex-wrap:wrap;align-items:center;gap:1.2mm;font-size:7.6pt}
+.rail .lbl{font-weight:800;color:var(--ink);width:100%;font-size:8pt;margin-bottom:.3mm}
+.st{padding:.7mm 2.2mm;border-radius:1.4mm;font-weight:600;white-space:nowrap}
+.st.ai{background:var(--ai);color:#fff}
+.st.hu{border:1.3px solid var(--human);color:var(--ink)}
+.ar{color:#a3aac0}
+.loop{font-size:7.2pt;color:var(--mute);width:100%}
+
+/* departments */
+.depts{display:grid;grid-template-columns:1fr 1fr;gap:1.4mm 3mm;counter-reset:none}
+.dp{display:flex;gap:2mm;align-items:baseline;padding:1.1mm 0;border-bottom:1px solid var(--line);min-width:0}
+.dp b{font-family:var(--mono);font-size:7.2pt;color:var(--ai);width:4mm;flex:none}
+.dp span{font-size:8pt}
+.dp span em{font-style:normal;color:var(--mute);font-size:7.2pt}
+.dp.top{grid-column:1/-1;background:var(--gold-wash);border-bottom:none;border-radius:1.6mm;padding:1.4mm 2mm}
+.dp.top b{color:#9a6b00}
+
+/* stack */
+.stack{display:flex;flex-direction:column;gap:1.6mm}
+.srow{display:grid;grid-template-columns:19mm 1fr;gap:2mm;align-items:start}
+.srow .k{font-weight:800;color:var(--ink);font-size:8pt;padding-top:.4mm}
+.chips{display:flex;flex-wrap:wrap;gap:1mm}
+.chip{font-size:7.4pt;padding:.3mm 1.8mm;border-radius:1.2mm;background:var(--wash);border:1px solid var(--line);color:var(--ink-2);white-space:nowrap}
+.chip.core{background:var(--ink);border-color:var(--ink);color:#fff}
+
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:2mm}
+.fact{border-top:2px solid var(--ink);padding-top:1.4mm}
+.fact strong{display:block;color:var(--ink);font-size:9.2pt;font-weight:800;line-height:1.25}
+.fact span{font-size:7.4pt;color:var(--mute)}
+
+/* roadmap */
+.road{padding:1mm 12mm 3mm}
+.road h2{font-size:11.5pt;font-weight:800;margin-bottom:2.5mm}
+.phases{display:grid;grid-template-columns:repeat(6,1fr);gap:0;position:relative}
+.phases::before{content:"";position:absolute;top:3.1mm;right:3mm;left:3mm;height:1.5px;background:var(--line)}
+.ph{position:relative;padding-inline-end:2mm;min-width:0}
+.ph .n{width:6.4mm;height:6.4mm;border-radius:50%;background:var(--paper);border:1.5px solid var(--ink);color:var(--ink);
+  font-family:var(--mono);font-weight:600;font-size:7.6pt;display:flex;align-items:center;justify-content:center;position:relative}
+.ph.now .n{background:var(--gold);border-color:var(--gold)}
+.ph b{display:block;color:var(--ink);font-size:8.3pt;margin-top:1.4mm}
+.ph p{font-size:7.2pt;color:var(--mute);line-height:1.4}
+
+/* ask */
+.ask{margin-top:auto;background:var(--gold-wash);border-top:3px solid var(--gold);padding:4mm 12mm 4mm;display:grid;grid-template-columns:1.1fr 1fr;gap:7mm}
+.ask h2{font-size:12.5pt;font-weight:900}
+.ask ol{margin:1.5mm 0 0;padding-inline-start:4.5mm;font-size:8.5pt;color:var(--ink)}
+.ask li{margin-bottom:.8mm}
+.ask .side h3{font-size:9pt;margin-bottom:1mm}
+.ask .side p{font-size:7.8pt}
+.foot{display:flex;justify-content:space-between;padding:2mm 12mm;font-size:6.8pt;color:var(--mute);background:var(--paper)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<article class="sheet">
+  <header class="mast">
+    <div class="mast-top">
+      <div class="brand">METATRON AI</div>
+      <span class="status">מה אנחנו בונים · אוקטובר 2026</span>
+    </div>
+    <h1 class="tagline">משרד תיווך שסוכני AI מנהלים, ומתווכים סוגרים בו עסקאות</h1>
+    <p class="lede">רוב יום העבודה של מתווך הולך על עבודה חוזרת: איתור מוכרים, פניות, תיאום פגישות, פרסום, מעקב והתאמת נכסים לקונים. METATRON מעביר את כל העבודה הזו לצוות סוכני בינה מלאכותית, ומשאיר למתווך את מה שרק אדם עושה: להיפגש, להציג ולסגור עסקה.</p>
+  </header>
+
+  <div class="main">
+    <!-- story column -->
+    <div class="col">
+      <section class="sec">
+        <h2>חלוקת העבודה</h2>
+        <div class="split">
+          <div class="who">
+            <h3><span class="sw ai"></span>סוכני AI</h3>
+            <ul>
+              <li>מאתרים מוכרים ופונים אליהם</li>
+              <li>מתאמים פגישות וסיורים ביומן</li>
+              <li>מפרסמים בכל הערוצים</li>
+              <li>מתמללים שיחות ובונים פרופיל קונה</li>
+              <li>מוצאים התאמות ומנהלים את הקשר עם הקונה</li>
+            </ul>
+          </div>
+          <div class="who">
+            <h3><span class="sw hu"></span>המתווך</h3>
+            <ul>
+              <li>מאשר כל קמפיין פנייה</li>
+              <li>נפגש עם המוכר ומגייס את הנכס</li>
+              <li>עונה לקונים בטלפון</li>
+              <li>מציג נכסים</li>
+              <li>מנהל משא ומתן וסוגר</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <h2>איך זה זורם</h2>
+        <div class="rail">
+          <span class="lbl">צד המוכר</span>
+          <span class="st ai">איתור</span><span class="ar">←</span>
+          <span class="st hu">אישור קמפיין</span><span class="ar">←</span>
+          <span class="st ai">וואטסאפ + שיחה קולית</span><span class="ar">←</span>
+          <span class="st ai">תיאום</span><span class="ar">←</span>
+          <span class="st hu">פגישת גיוס</span><span class="ar">←</span>
+          <span class="st ai">שיווק</span>
+          <span class="loop">לא גויס? הנכס עובר ל-Follow-up אוטומטי לפי תוכנית שהמתווך הגדיר</span>
+        </div>
+        <div class="rail" style="margin-top:1.5mm">
+          <span class="lbl">צד הקונה</span>
+          <span class="st hu">שיחה נכנסת</span><span class="ar">←</span>
+          <span class="st ai">תמלול ופרופיל</span><span class="ar">←</span>
+          <span class="st ai">התאמות</span><span class="ar">←</span>
+          <span class="st ai">תיאום סיור</span><span class="ar">←</span>
+          <span class="st hu">סיור</span><span class="ar">←</span>
+          <span class="st hu">משא ומתן</span>
+          <span class="loop">לא מתאים? הקונה חוזר ללופ איתור עד שהוא או המתווך עוצרים</span>
+        </div>
+      </section>
+
+      <section class="sec">
+        <h2>מבנה המוצר</h2>
+        <div class="facts">
+          <div class="fact"><strong>למתווך סוליסט</strong><span>כל מתווך הוא חשבון נפרד עם הנתונים שלו</span></div>
+          <div class="fact"><strong>דשבורד מעוצב</strong><span>כל מה שהסוכנים עושים, משפכים, הכנסות ועלויות, במסך אחד</span></div>
+          <div class="fact"><strong>האדם בשליטה</strong><span>קמפיין יוצא רק אחרי אישור, ו"הסר" עוצר הכול</span></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- system column -->
+    <div class="col">
+      <section class="sec">
+        <h2>9 מחלקות AI <small>כל מחלקה היא צוות סוכנים</small></h2>
+        <div class="depts">
+          <div class="dp top"><b>0</b><span><strong>סוכן-על</strong> <em>· מתזמר את כל המחלקות, עוקב אחרי SLA ומפיק דוחות</em></span></div>
+          <div class="dp"><b>1</b><span>איתור מוכרים</span></div>
+          <div class="dp"><b>2</b><span>פנייה קרה <em>· וואטסאפ וקול</em></span></div>
+          <div class="dp"><b>3</b><span>תיאום פגישות וסיורים</span></div>
+          <div class="dp"><b>4</b><span>Follow-up למוכרים</span></div>
+          <div class="dp"><b>5</b><span>שיווק ופרסום</span></div>
+          <div class="dp"><b>6</b><span>מודיעין שיחות</span></div>
+          <div class="dp"><b>7</b><span>התאמות ולופ קונה</span></div>
+          <div class="dp"><b>8</b><span>סיוע בעסקה <em>· בהמשך</em></span></div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <h2>המערכות שעליהן בונים</h2>
+        <div class="stack">
+          <div class="srow"><span class="k">סוכנים</span><div class="chips"><span class="chip core">CrewAI</span><span class="chip core">Claude</span><span class="chip">Opus · Sonnet · Haiku</span></div></div>
+          <div class="srow"><span class="k">שרת</span><div class="chips"><span class="chip core">Python</span><span class="chip">FastAPI</span><span class="chip">Redis</span><span class="chip">Postgres + pgvector</span></div></div>
+          <div class="srow"><span class="k">CRM</span><div class="chips"><span class="chip core">nadlan-pro</span><span class="chip">React Native</span><span class="chip">Firebase</span></div></div>
+          <div class="srow"><span class="k">תקשורת</span><div class="chips"><span class="chip">WhatsApp</span><span class="chip">Voice AI</span><span class="chip">מספרים וירטואליים</span><span class="chip">תמלול עברית</span><span class="chip">Google Calendar</span></div></div>
+          <div class="srow"><span class="k">פרסום</span><div class="chips"><span class="chip">יד2</span><span class="chip">מדלן</span><span class="chip">פייסבוק</span><span class="chip">אינסטגרם</span><span class="chip">TikTok</span><span class="chip">YouTube</span><span class="chip">אתר המשרד</span></div></div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <h2>לא מתחילים מאפס</h2>
+        <p style="font-size:8.1pt">אפליקציית ה-CRM של המתווך, <strong>nadlan-pro</strong>, כבר עובדת. יש בה נכסים, לקוחות, יומן, התאמות, סוכן וואטסאפ ושיתופי פעולה בין מתווכים. METATRON נבנה מעליה כשכבת הסוכנים, בלי לשנות את מבנה הנתונים שלה.</p>
+      </section>
+    </div>
+  </div>
+
+  <section class="road">
+    <h2>סדר הבנייה</h2>
+    <div class="phases">
+      <div class="ph now"><div class="n">1</div><b>וואטסאפ</b><p>פנייה ראשונה אוטומטית למוכרים, שיחה עם AI</p></div>
+      <div class="ph"><div class="n">2</div><b>שיחה טלפונית</b><p>Voice AI ותיאום פגישת גיוס ביומן</p></div>
+      <div class="ph"><div class="n">3</div><b>פרסום ו-CRM</b><p>קליטת הנכס ופרסום בכל הערוצים</p></div>
+      <div class="ph"><div class="n">4</div><b>שיחות והתאמות</b><p>תמלול, פרופיל קונה, חיפוש והתאמות</p></div>
+      <div class="ph"><div class="n">5</div><b>Follow-up</b><p>חיזור אחרי מי שלא גויס, לפי הגדרות המתווך</p></div>
+      <div class="ph"><div class="n">◆</div><b>דשבורד</b><p>מעוצב, ונבנה לאורך כל השלבים</p></div>
+    </div>
+  </section>
+
+  <section class="ask">
+    <div>
+      <h2>העקרונות שמנחים את המערכת</h2>
+      <ol>
+        <li><strong>האדם מחליט:</strong> אף פנייה לא יוצאת בלי אישור מתווך, ומחירים והתחייבויות קובע רק אדם</li>
+        <li><strong>כל סוכן רואה רק מה שמותר לו:</strong> הוא פועל בשם המתווך שהפעיל אותו ובהרשאות שלו</li>
+        <li><strong>"הסר" עוצר הכול:</strong> בקשה אחת עוצרת מיד את כל הפניות לאותו איש קשר</li>
+        <li><strong>הכול מתועד:</strong> כל פעולה של סוכן נרשמת, בשם מי ומתי</li>
+      </ol>
+    </div>
+    <div class="side">
+      <h3>למה מתחילים בגיוס</h3>
+      <p>גיוס נכסים הוא צוואר הבקבוק של כל משרד. בלי נכסים אין מה לשווק ואין מה להתאים. השלב הזה גם בודק מוקדם את ההנחות המרכזיות: האם מוכרים עונים לפנייה בוואטסאפ, ואיך נשמע סוכן קולי בעברית.</p>
+      <h3 style="margin-top:2mm">מה יוצא מזה למשרד</h3>
+      <p>המתווך מקבל יומן מלא בפגישות גיוס וסיורים שכבר תואמו, והמערכת מטפלת בכל מה שקורה ביניהן. המנהל רואה בכל רגע איפה עומד כל מוכר וכל קונה.</p>
+    </div>
+  </section>
+  <div class="foot"><span>METATRON AI · One Pager</span><span>אוקטובר 2026 · פירוט מלא במסמך האפיון v0.3</span></div>
+</article>
+<script>
+/* Keep the A4 layout at every width: shrink the whole sheet to fit the viewer instead of reflowing it. */
+(function(){
+  var sheet=document.querySelector('.sheet');
+  function fit(){
+    var avail=document.documentElement.clientWidth-32;
+    var z=Math.min(1,avail/sheet.offsetWidth);
+    sheet.style.zoom=z>0?z:1;
+  }
+  fit();
+  window.addEventListener('resize',fit);
+  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(fit);}
+})();
+</script>

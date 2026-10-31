@@ -1,0 +1,218 @@
+<title>METATRON Recruitment Flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one A4 sheet for the course instructor. Navy masthead with the two-line definition → the single flow as a rail → two crews side by side → gate/model/control strip → existing-vs-built + delivery → footer. Single light theme on purpose: printed approval document. */
+:root{
+  --ink:#0b1437; --ink-2:#36405e; --mute:#6b7391; --line:#dfe3ee;
+  --paper:#ffffff; --wash:#f3f5fa; --gold:#f5b301; --gold-wash:#fff6d6;
+  --ai:#2f5bea; --human:#5b6478; --stop:#d92d20; --stop-wash:#fdecea; --ok:#15803d; --ok-wash:#e8f6ec;
+  --font:"Heebo","Segoe UI","Arial",sans-serif; --mono:"IBM Plex Mono",Consolas,monospace;
+  color-scheme:light;
+}
+@page{size:A4;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{background:#e6e9f2;color:var(--ink-2);font-family:var(--font);overflow-x:hidden;
+  padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet{direction:rtl;background:var(--paper);width:210mm;height:297mm;overflow:hidden;margin:0 auto;
+  box-shadow:0 10px 40px rgba(11,20,55,.14);display:flex;flex-direction:column;font-size:8.4pt;line-height:1.45}
+.sheet>*{flex-shrink:0}
+@media print{body{background:var(--paper);padding:0}.sheet{box-shadow:none;zoom:1!important}}
+h1,h2,h3{color:var(--ink);margin:0;text-wrap:balance}
+p{margin:0}
+code{font-family:var(--mono);font-size:7.2pt;background:var(--wash);padding:0 1mm;border-radius:.8mm;direction:ltr;unicode-bidi:isolate}
+
+.mast{background:var(--ink);color:#fff;padding:6.5mm 12mm 5.5mm;position:relative;overflow:hidden}
+.mast::after{content:"";position:absolute;left:-34mm;top:-44mm;width:70mm;height:70mm;border-radius:50%;
+  border:1.2px solid rgba(245,179,1,.35);box-shadow:0 0 0 9mm rgba(245,179,1,.06),0 0 0 18mm rgba(245,179,1,.04)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:4mm;position:relative;z-index:1}
+.brand{font-weight:900;font-size:20pt;letter-spacing:.06em;color:var(--gold);direction:ltr;line-height:1}
+.brand small{font-weight:600;font-size:9pt;letter-spacing:.02em;color:#c9cfe2;margin-left:2.5mm}
+.status{font-size:7.2pt;font-weight:700;color:var(--ink);background:var(--gold);padding:1.1mm 3mm;border-radius:10mm;white-space:nowrap}
+.title{font-size:13.5pt;font-weight:800;color:#fff;margin-top:2.6mm;position:relative;z-index:1}
+.def{margin-top:2mm;position:relative;z-index:1;color:#dfe4f2;font-size:8.6pt;max-width:178mm}
+.def b{color:#fff}
+
+.body{padding:6mm 12mm 0;display:flex;flex-direction:column;gap:5.2mm}
+.sec h2{font-size:10.5pt;font-weight:800;margin-bottom:1.6mm;display:flex;align-items:baseline;gap:2mm}
+.sec h2 small{font-weight:500;color:var(--mute);font-size:7.6pt}
+
+/* the flow rail */
+.flow{display:grid;grid-template-columns:repeat(7,1fr);gap:1.4mm;align-items:stretch}
+.step{border-radius:2mm;padding:1.8mm 2mm;position:relative;min-width:0}
+.step b{display:block;font-size:8pt;color:var(--ink);line-height:1.25}
+.step span{display:block;font-size:6.9pt;color:var(--mute);line-height:1.3;margin-top:.5mm}
+.step .who{direction:ltr;text-align:right;font-family:var(--mono);font-size:6pt;letter-spacing:.08em;font-weight:600;margin-bottom:.6mm}
+.step.ai{background:#eaf0ff}.step.ai .who{color:var(--ai)}
+.step.hu{background:var(--paper);border:1.4px solid var(--human)}.step.hu .who{color:var(--human)}
+.step.gate{background:var(--gold-wash);border:1.4px solid var(--gold)}.step.gate .who{color:#9a6b00}
+.step+.step::before{content:"←";position:absolute;right:-1.45mm;top:50%;transform:translate(50%,-50%);color:#a3aac0;font-size:8pt;background:var(--paper);line-height:1}
+.branch{display:flex;gap:2mm;margin-top:1.6mm;font-size:7.2pt;flex-wrap:wrap}
+.branch span{padding:.4mm 2mm;border-radius:1.2mm;background:var(--wash)}
+.branch .rm{background:var(--stop-wash);color:var(--stop);font-weight:700}
+
+/* crews */
+.crews{display:grid;grid-template-columns:1fr 1fr;gap:4mm}
+.crew{border:1px solid var(--line);border-radius:2.5mm;overflow:hidden}
+.crew h3{font-size:9pt;padding:1.8mm 3mm;background:var(--ink);color:#fff;display:flex;justify-content:space-between;align-items:baseline}
+.crew h3 small{font-weight:500;color:#c9cfe2;font-size:7pt}
+.agents{display:flex;flex-direction:column}
+.ag{display:grid;grid-template-columns:24mm 1fr;gap:2mm;padding:1.6mm 3mm;border-bottom:1px solid var(--line);font-size:7.6pt}
+.ag:last-child{border-bottom:none}
+.ag b{color:var(--ink);font-size:7.6pt;direction:ltr;text-align:right}
+
+/* strip */
+.strip{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:3mm}
+.box{border-radius:2.5mm;padding:2.6mm 3mm}
+.box h3{font-size:8.8pt;margin-bottom:1mm}
+.box ul{margin:0;padding-inline-start:3.8mm;font-size:7.5pt}
+.box li{margin-bottom:.3mm}
+.box.stop{background:var(--stop-wash);border:1px solid #f5c2bd}
+.box.stop h3{color:var(--stop)}
+.box.model{background:var(--wash)}
+.box.ctrl{background:var(--gold-wash);border:1px solid #f3dc8f}
+.vs{display:flex;gap:1.5mm;margin:1mm 0 .8mm}
+.vs div{flex:1;background:var(--paper);border-radius:1.4mm;padding:1mm 1.6mm;font-size:7.2pt;border:1px solid var(--line)}
+.vs div b{display:block;color:var(--ink);font-size:7.6pt}
+.note{font-size:6.9pt;color:var(--mute)}
+
+/* bottom */
+.bottom{display:grid;grid-template-columns:1.2fr 1fr;gap:4mm}
+.ex{width:100%;border-collapse:collapse;font-size:7.4pt}
+.ex th{background:var(--wash);color:var(--ink);text-align:right;padding:1.2mm 2mm;font-weight:800}
+.ex td{padding:1mm 2mm;border-bottom:1px solid var(--line);vertical-align:top}
+.ex td:first-child{color:var(--mute);width:42%}
+.chips{display:flex;flex-wrap:wrap;gap:1mm}
+.chip{font-size:7.1pt;padding:.3mm 1.6mm;border-radius:1.2mm;background:var(--wash);border:1px solid var(--line);white-space:nowrap}
+.chip.core{background:var(--ink);border-color:var(--ink);color:#fff}
+.prs{display:grid;grid-template-columns:1fr 1fr;gap:.6mm 3mm;font-size:7.1pt;margin-top:1.2mm}
+.prs span{font-family:var(--mono);font-size:6.6pt;color:var(--ai)}
+.out{margin-top:1.6mm;font-size:7.2pt;color:var(--mute)}
+.out b{color:var(--ink)}
+
+.foot{margin-top:auto;display:flex;justify-content:space-between;padding:2.2mm 12mm;font-size:6.8pt;color:var(--mute);border-top:1px solid var(--line)}
+</style>
+
+<article class="sheet">
+  <header class="mast">
+    <div class="top">
+      <div class="brand">METATRON<small>Recruitment Flow</small></div>
+      <span class="status">פרויקט גמר · לאישור · אוקטובר 2026</span>
+    </div>
+    <h1 class="title">זרימת גיוס אחת מקצה לקצה: ממוכר בקובץ ועד פגישה ביומן</h1>
+    <p class="def">מוכרים נטענים מקובץ. <b>צוות נתונים</b> מנקה, מנתח ובונה חוזה JSON שמאומת לפני האימון. <b>צוות מודל</b> מאמן ומשווה שני מודלי Lead Scoring שמדרגים את המוכרים. סוכן מנסח פנייה, <b>המתווך מאשר כל הודעה</b>, וההודעה נשלחת בוואטסאפ. התשובה מטופלת, כולל <b>"הסר"</b>, ופגישה נקבעת ביומן. בלי שיחה קולית.</p>
+  </header>
+
+  <div class="body">
+    <section class="sec">
+      <h2>הזרימה <small>CrewAI Flow · מה שמסומן במסגרת מבצע אדם</small></h2>
+      <div class="flow">
+        <div class="step ai"><div class="who">FILE</div><b>מוכר נכנס</b><span>ייבוא CSV או Excel</span></div>
+        <div class="step ai"><div class="who">2 CREWS</div><b>ניקוי, חוזה ומודל</b><span>אימות, ואז ציון סיכוי לכל מוכר</span></div>
+        <div class="step ai"><div class="who">AGENT</div><b>ניסוח פנייה</b><span>הודעה אישית למוכרים המדורגים</span></div>
+        <div class="step gate"><div class="who">BROKER</div><b>המתווך מאשר</b><span>אשר, ערוך או דחה</span></div>
+        <div class="step ai"><div class="who">WHATSAPP</div><b>שליחה</b><span>Cloud API, או סימולציה</span></div>
+        <div class="step ai"><div class="who">AGENT</div><b>טיפול בתשובה</b><span>מעוניין, לא, שאלה או הסר</span></div>
+        <div class="step ai"><div class="who">CALENDAR</div><b>פגישה ביומן</b><span>מועד לפי זמינות המתווך</span></div>
+      </div>
+      <div class="branch">
+        <span class="rm">"הסר": רשימת חסימה גלובלית, הודעת אישור אחת, ואף שליחה נוספת</span>
+        <span>לא מעוניין: סגירה ותיעוד</span>
+        <span>שאלה: תשובה שעוברת שוב אישור מתווך</span>
+        <span>כל תוצאה נשמרת כתווית לאימון הבא</span>
+      </div>
+    </section>
+
+    <section class="sec">
+      <h2>שני הצוותים <small>4 סוכנים בכל צוות · הסוכנים מפעילים קוד קבוע ולא כותבים אותו מחדש</small></h2>
+      <div class="crews">
+        <div class="crew">
+          <h3>צוות 1 · נתונים <small>Data Crew</small></h3>
+          <div class="agents">
+            <div class="ag"><b>Data Cleaner</b><span>כפילויות, ערכים חסרים, טיפוסים, נרמול שמות ערים</span></div>
+            <div class="ag"><b>EDA Analyst</b><span>התפלגויות, קורלציות, השוואה מול המטרה</span></div>
+            <div class="ag"><b>Insights Writer</b><span>תובנות עסקיות למתווך</span></div>
+            <div class="ag"><b>Contract Author</b><span>חוזה הנתונים <code>data_contract.json</code></span></div>
+          </div>
+        </div>
+        <div class="crew">
+          <h3>צוות 2 · מודל <small>Model Crew</small></h3>
+          <div class="agents">
+            <div class="ag"><b>Feature Engineer</b><span>מאפיינים, חלוקה ל-train ו-test עם seed קבוע</span></div>
+            <div class="ag"><b>Model Trainer</b><span>אימון v1 ו-v2 בפונקציות קבועות</span></div>
+            <div class="ag"><b>Evaluator</b><span>מדדים, השוואה ובחירת מודל</span></div>
+            <div class="ag"><b>Model Card Writer</b><span><code>MODEL_CARD.md</code>: נתונים, מגבלות, שימוש</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="strip">
+      <div class="box stop">
+        <h3>⛔ שער לפני האימון</h3>
+        <ul>
+          <li>סכמה, טיפוסים, טווחים וערכים מותרים</li>
+          <li><code>seller_id</code> ייחודי, מינימום שורות, איזון המטרה</li>
+          <li><b>בדיקה שנכשלת עוצרת את ה-Flow</b>, כותבת דוח, ומסמנת באדום במסך</li>
+          <li>שחזור: <code>config.yaml</code>, seed, hash של הנתונים וגרסאות נעולות</li>
+        </ul>
+      </div>
+      <div class="box model">
+        <h3>המודל: Lead Scoring</h3>
+        <p style="font-size:7.5pt">חוזה האם המוכר יסכים לפגישת גיוס תוך 14 יום, לפי ימים באוויר, הורדות מחיר, מחיר מול חציון האזור, חדרים, שטח ומקור המודעה.</p>
+        <div class="vs"><div><b>v1</b>Logistic Regression</div><div><b>v2</b>Gradient Boosting</div></div>
+        <p class="note">מדדים: ROC-AUC, PR-AUC ו-Precision@20%. <b>הנתונים סינתטיים</b>, כולל בעיות איכות שהוזרקו בכוונה, וכך זה גם מתועד ב-Model Card. הזרימה אוספת תוויות אמיתיות לגרסה הבאה.</p>
+      </div>
+      <div class="box ctrl">
+        <h3>שליטה וחוק</h3>
+        <ul>
+          <li><b>אף הודעה לא נשלחת בלי אישור מתווך</b></li>
+          <li><b>"הסר"</b> מזוהה גם בניסוח חופשי ונחסם לתמיד, ויש לזה טסט</li>
+          <li>ההדגמה שולחת <b>רק למספרים שלנו</b>, לא למוכרים אמיתיים</li>
+          <li>פנייה יזומה בלי הסכמה מוגבלת בחוק (סעיף 30א)</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="bottom">
+      <div class="sec">
+        <h2>מה קיים ומה נבנה בקורס</h2>
+        <table class="ex">
+          <tr><th>קיים לפני הקורס: nadlan-pro</th><th>נבנה בקורס: ריפו <code>metatron-ai</code></th></tr>
+          <tr><td>אפליקציית CRM: נכסים, לקוחות, יומן</td><td>CrewAI Flow ושני הצוותים</td></tr>
+          <tr><td>Firebase Auth + Firestore</td><td>מחולל נתונים, חוזה, אימות ועצירה</td></tr>
+          <tr><td>סוכן וואטסאפ לקונים (Worker)</td><td>מודלי Lead Scoring ו-Model Card</td></tr>
+          <tr><td>החיבור היחיד: הפגישה נכתבת ליומן הקיים</td><td>ניסוח, אישור, שליחה, "הסר", תיאום, Streamlit</td></tr>
+        </table>
+      </div>
+      <div class="sec">
+        <h2>טכנולוגיה ומסירה</h2>
+        <div class="chips">
+          <span class="chip core">Python</span><span class="chip core">CrewAI Flow</span><span class="chip core">Streamlit</span>
+          <span class="chip">pandas</span><span class="chip">scikit-learn</span><span class="chip">pandera</span><span class="chip">Claude</span>
+          <span class="chip">WhatsApp Cloud API</span><span class="chip">Firestore</span><span class="chip">GitHub + PRs</span>
+        </div>
+        <div class="prs">
+          <div><span>PR 1–2</span> מבנה ונתונים סינתטיים</div>
+          <div><span>PR 3–4</span> צוות נתונים וחוזה</div>
+          <div><span>PR 5–6</span> צוות מודל ו-Flow</div>
+          <div><span>PR 7–8</span> פנייה, "הסר", וואטסאפ, יומן</div>
+          <div><span>PR 9–10</span> Streamlit, README, הדגמה</div>
+        </div>
+        <p class="out"><b>לא בהיקף:</b> שיחה קולית, סריקת יד2, פרסום, תמלול שיחות והתאמות לקונים. אלה נשארים לגרסה הבאה.</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="foot"><span>METATRON · פרויקט גמר · CrewAI Flow</span><span>Streamlit: נתונים · מודל · תור אישור · שיחות · יומן</span></div>
+</article>
+<script>
+(function(){
+  var sheet=document.querySelector('.sheet');
+  function fit(){var avail=document.documentElement.clientWidth-32;var z=Math.min(1,avail/sheet.offsetWidth);sheet.style.zoom=z>0?z:1;}
+  fit();window.addEventListener('resize',fit);
+  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(fit);}
+})();
+</script>

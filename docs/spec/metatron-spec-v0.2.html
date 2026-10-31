@@ -1,0 +1,1555 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>METATRON AI — מסמך אפיון v0.2</title>
+<style>
+@page { size: A4; margin: 0; }
+@font-face{font-family:"Heebo";font-style:normal;font-weight:100 900;font-display:block;src:url("fonts/heebo-hebrew.woff2") format("woff2");unicode-range:U+0307-0308,U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F;}
+@font-face{font-family:"Heebo";font-style:normal;font-weight:100 900;font-display:block;src:url("fonts/heebo-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+:root{
+  --ink:#0f172a; --ink2:#334155; --mute:#64748b; --line:#e2e8f0; --bg:#f8fafc;
+  --navy:#0b1437; --gold:#f5b301;
+  --d0:#6d28d9; --d1:#0891b2; --d2:#2563eb; --d3:#0d9488; --d4:#d97706;
+  --d5:#db2777; --d6:#4f46e5; --d7:#16a34a; --d8:#b91c1c; --d9:#a21caf; --human:#475569;
+  --ok:#16a34a; --wip:#ca8a04; --open:#dc2626; --idea:#7c3aed;
+}
+*{box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+html,body{margin:0;padding:0;background:#cbd5e1;}
+body{font-family:"Heebo",sans-serif;font-feature-settings:"kern";color:var(--ink);font-size:10pt;line-height:1.5;counter-reset:pg;}
+.page{width:210mm;height:297mm;background:#fff;margin:0 auto 8mm;position:relative;overflow:hidden;
+  padding:16mm 15mm 18mm;page-break-after:always;break-after:page;counter-increment:pg;}
+@media print{ body{background:#fff;} .page{margin:0;} }
+.pf{position:absolute;bottom:7mm;left:15mm;right:15mm;display:flex;justify-content:space-between;
+  font-size:7.5pt;color:var(--mute);border-top:1px solid var(--line);padding-top:2mm;}
+.pf .n::after{content:"עמוד " counter(pg);}
+.ph{display:flex;align-items:center;gap:4mm;margin-bottom:6mm;}
+.ph .num{width:12mm;height:12mm;border-radius:3mm;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13pt;flex:none;}
+.ph h1{margin:0;font-size:19pt;line-height:1.15;}
+.ph .sub{color:var(--mute);font-size:9pt;}
+.ph .grow{flex:1;}
+h2{font-size:12.5pt;margin:5mm 0 2.5mm;display:flex;align-items:center;gap:2mm;}
+h2::before{content:"";width:3px;height:14pt;background:var(--d2);border-radius:2px;display:inline-block;}
+h3{font-size:10.5pt;margin:2mm 0 1mm;}
+p{margin:0 0 2mm;}
+ul{margin:0 0 2mm;padding-inline-start:5mm;}
+li{margin-bottom:.6mm;}
+code,.mono{font-family:Consolas,"Courier New",monospace;font-size:8.5pt;direction:ltr;unicode-bidi:embed;background:#f1f5f9;padding:0 1mm;border-radius:1mm;}
+.tag{display:inline-flex;align-items:center;gap:1mm;font-size:7.5pt;font-weight:700;padding:.4mm 2mm;border-radius:10mm;white-space:nowrap;}
+.t-ok{background:#dcfce7;color:#166534;} .t-wip{background:#fef9c3;color:#854d0e;}
+.t-open{background:#fee2e2;color:#991b1b;} .t-idea{background:#ede9fe;color:#5b21b6;}
+.t-ai{background:#dbeafe;color:#1e40af;} .t-hu{background:#e2e8f0;color:#1e293b;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:4mm;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3.5mm;}
+.card{border:1px solid var(--line);border-radius:3mm;padding:3.5mm 4mm;background:#fff;}
+.soft{background:var(--bg);}
+table{width:100%;border-collapse:collapse;font-size:8.6pt;}
+th{background:var(--navy);color:#fff;text-align:right;padding:1.6mm 2mm;font-weight:600;}
+td{border-bottom:1px solid var(--line);padding:1.5mm 2mm;vertical-align:top;}
+tr:nth-child(even) td{background:#f8fafc;}
+.callout{border-radius:3mm;padding:3mm 4mm;background:linear-gradient(90deg,#eef2ff,#f5f3ff);border-inline-start:4px solid var(--d6);font-size:9.3pt;}
+.small{font-size:8.3pt;color:var(--ink2);}
+.mute{color:var(--mute);}
+/* ---------- cover ---------- */
+.cover{background:radial-gradient(circle at 80% 15%,#3b2a8f 0,transparent 45%),radial-gradient(circle at 10% 90%,#0e7490 0,transparent 45%),var(--navy);color:#fff;padding:22mm 18mm;}
+.cover .brand{font-size:44pt;font-weight:900;letter-spacing:2px;direction:ltr;text-align:right;margin-top:30mm;color:#fbbf24;}
+.cover .title{font-size:24pt;font-weight:800;margin-top:4mm;}
+.cover .lead{font-size:12.5pt;color:#cbd5e1;max-width:150mm;margin-top:6mm;line-height:1.6;}
+.cover .meta{position:absolute;bottom:22mm;right:18mm;left:18mm;display:flex;gap:6mm;flex-wrap:wrap;}
+.cover .meta div{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:3mm;padding:3mm 4mm;font-size:9pt;}
+.cover .meta b{display:block;font-size:11pt;color:#fde68a;}
+.orbit{position:absolute;left:-35mm;top:150mm;width:120mm;height:120mm;opacity:.55;}
+/* ---------- flow ---------- */
+.flow{display:flex;flex-direction:column;align-items:stretch;gap:0;}
+.step{display:flex;gap:3mm;align-items:stretch;border-radius:3mm;border:1px solid var(--line);background:#fff;overflow:hidden;}
+.step .bar{width:13mm;flex:none;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:13pt;}
+.step .bar small{font-size:6.5pt;font-weight:600;opacity:.9;}
+.step .body{padding:2.2mm 0 2.2mm 3mm;flex:1;}
+.step .body b{font-size:10pt;}
+.step .body div{font-size:8.6pt;color:var(--ink2);}
+.arrow{height:5mm;display:flex;justify-content:center;align-items:center;color:#94a3b8;font-size:11pt;line-height:1;}
+.branch{display:grid;grid-template-columns:1fr 1fr;gap:3mm;}
+.loopbox{border:2px dashed var(--d7);border-radius:4mm;padding:3mm;position:relative;}
+.loopbox .lbl{position:absolute;top:-3.2mm;right:6mm;background:#fff;padding:0 2mm;color:var(--d7);font-weight:800;font-size:8.5pt;}
+/* ---------- state machine ---------- */
+.sm{display:flex;flex-wrap:wrap;align-items:center;gap:1.5mm;direction:ltr;justify-content:flex-start;}
+.st{font-family:Consolas,monospace;font-size:8pt;padding:1mm 2mm;border-radius:2mm;color:#fff;font-weight:700;}
+.sm .ar{color:#94a3b8;font-size:10pt;}
+/* ---------- dept cards ---------- */
+.dept{border-radius:3.5mm;overflow:hidden;border:1px solid var(--line);background:#fff;display:flex;flex-direction:column;}
+.dept .hd{color:#fff;padding:2.5mm 4mm;display:flex;align-items:center;gap:3mm;}
+.dept .hd .no{width:8mm;height:8mm;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-weight:800;}
+.dept .hd b{font-size:11pt;}
+.dept .hd span{font-size:8pt;opacity:.85;direction:ltr;}
+.dept .bd{padding:2.5mm 4mm 3mm;font-size:8.5pt;}
+.dept .row{display:flex;gap:2mm;margin-bottom:1mm;}
+.dept .row .k{flex:none;width:15mm;color:var(--mute);font-weight:700;}
+.chips{display:flex;flex-wrap:wrap;gap:1mm;}
+.chip{font-size:7.3pt;padding:.3mm 1.6mm;border-radius:5mm;background:#f1f5f9;color:var(--ink2);border:1px solid var(--line);}
+/* ---------- architecture ---------- */
+.layer{border-radius:3mm;padding:2.5mm 3.5mm;margin-bottom:2mm;display:flex;gap:3mm;align-items:center;}
+.layer .ln{width:26mm;flex:none;font-weight:800;font-size:9pt;}
+.layer .items{display:flex;flex-wrap:wrap;gap:1.5mm;flex:1;}
+.box{background:#fff;border-radius:2mm;padding:1mm 2.5mm;font-size:8pt;border:1px solid rgba(0,0,0,.08);box-shadow:0 1px 0 rgba(0,0,0,.04);}
+/* ---------- permissions ---------- */
+.pm td,.pm th{text-align:center;} .pm td:first-child,.pm th:first-child{text-align:right;}
+.s-none{background:#f1f5f9;color:#94a3b8;} .s-own{background:#dbeafe;color:#1e40af;}
+.s-shared{background:#ccfbf1;color:#115e59;} .s-office{background:#ede9fe;color:#5b21b6;}
+.sc{display:inline-block;min-width:13mm;padding:.3mm 1.5mm;border-radius:1.5mm;font-size:7.5pt;font-weight:700;font-family:Consolas,monospace;}
+/* ---------- mockups ---------- */
+.mockwrap{position:relative;}
+.mocknote{display:flex;align-items:center;gap:2mm;font-size:8pt;color:#92400e;background:#fffbeb;border:1px dashed #f59e0b;border-radius:2mm;padding:1.2mm 3mm;margin-bottom:3mm;}
+.app{border-radius:3mm;overflow:hidden;border:1px solid #cbd5e1;display:flex;height:212mm;background:#f1f5f9;box-shadow:0 2mm 6mm rgba(15,23,42,.12);}
+.side{width:34mm;background:var(--navy);color:#cbd5e1;padding:3mm 2.5mm;font-size:7.8pt;flex:none;}
+.net{display:grid;grid-template-columns:1fr 1fr;gap:3mm;}
+.flowcol{border-radius:3mm;padding:3mm;}
+.mode{border-radius:3mm;padding:3mm;border:1px solid var(--line);background:#fff;}
+.mode .ic{font-size:15pt;}
+.side .logo{color:#fde68a;font-weight:900;direction:ltr;text-align:right;font-size:10pt;margin-bottom:4mm;letter-spacing:1px;}
+.side .it{padding:1.4mm 2mm;border-radius:1.5mm;margin-bottom:.8mm;display:flex;align-items:center;gap:1.5mm;}
+.side .it.on{background:rgba(255,255,255,.12);color:#fff;font-weight:700;}
+.dot{width:2mm;height:2mm;border-radius:50%;display:inline-block;flex:none;}
+.main{flex:1;padding:3.5mm;display:flex;flex-direction:column;gap:2.5mm;min-width:0;}
+.topbar{display:flex;align-items:center;gap:2mm;}
+.topbar .t{font-weight:800;font-size:11pt;flex:1;}
+.pill{font-size:7pt;padding:.5mm 2mm;border-radius:5mm;background:#fff;border:1px solid var(--line);}
+.btn{font-size:7.5pt;padding:1mm 2.5mm;border-radius:1.5mm;font-weight:700;color:#fff;background:var(--d2);display:inline-block;}
+.btn.g{background:var(--d7);} .btn.o{background:#fff;color:var(--ink2);border:1px solid #cbd5e1;} .btn.r{background:#ef4444;}
+.w{background:#fff;border-radius:2.5mm;padding:2.5mm 3mm;border:1px solid #e2e8f0;min-width:0;}
+.w .wt{font-size:8pt;font-weight:800;color:var(--ink2);margin-bottom:1.5mm;display:flex;align-items:center;gap:1.5mm;}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:2mm;}
+.kpi{background:#fff;border-radius:2.5mm;padding:2mm 2.5mm;border:1px solid #e2e8f0;border-top:3px solid var(--d2);}
+.kpi .v{font-size:14pt;font-weight:900;line-height:1.1;}
+.kpi .l{font-size:6.8pt;color:var(--mute);}
+.kpi .d{font-size:6.5pt;color:var(--ok);font-weight:700;}
+.mini{font-size:7.2pt;color:var(--ink2);}
+.hbar{min-width:26mm;height:4.2mm;border-radius:1mm;display:flex;align-items:center;padding:0 1.5mm;color:#fff;font-size:6.8pt;font-weight:700;margin-bottom:1mm;white-space:nowrap;}
+.kan{display:grid;grid-template-columns:repeat(6,1fr);gap:2mm;flex:1;min-height:0;}
+.col{background:#e9eef5;border-radius:2mm;padding:1.5mm;display:flex;flex-direction:column;gap:1.5mm;}
+.col .ch{font-size:7.3pt;font-weight:800;display:flex;justify-content:space-between;padding:0 .5mm;}
+.kc{background:#fff;border-radius:1.5mm;padding:1.5mm;font-size:6.8pt;border-inline-start:2.5px solid var(--d2);line-height:1.35;}
+.kc b{font-size:7.3pt;display:block;}
+.bubble{font-size:7pt;padding:1.4mm 2mm;border-radius:2mm;max-width:85%;margin-bottom:1.2mm;line-height:1.35;}
+.b-in{background:#fff;border:1px solid #e2e8f0;align-self:flex-start;}
+.b-out{background:#dcfce7;align-self:flex-end;}
+.chat{background:#efeae2;border-radius:2mm;padding:2mm;display:flex;flex-direction:column;}
+.phone{width:58mm;height:118mm;border-radius:7mm;background:#0f172a;padding:2.2mm;flex:none;}
+.screen{background:#f8fafc;border-radius:5mm;height:100%;overflow:hidden;display:flex;flex-direction:column;}
+.screen .sh{background:var(--navy);color:#fff;padding:3mm 3mm 2mm;font-size:8pt;font-weight:800;}
+.screen .sb{padding:2.5mm;font-size:7pt;display:flex;flex-direction:column;gap:1.8mm;}
+.fld{background:#fff;border:1px solid #e2e8f0;border-radius:1.5mm;padding:1.4mm 2mm;}
+.fld .k{color:var(--mute);font-size:6.3pt;}
+.tog{width:6mm;height:3.4mm;border-radius:2mm;background:var(--d7);display:inline-block;position:relative;vertical-align:middle;}
+.tog::after{content:"";position:absolute;top:.4mm;left:.4mm;width:2.6mm;height:2.6mm;border-radius:50%;background:#fff;}
+.tog.off{background:#cbd5e1;} .tog.off::after{left:auto;right:.4mm;}
+.bars{display:flex;align-items:flex-end;gap:2mm;height:30mm;padding-top:2mm;}
+.bars .b{flex:1;border-radius:1mm 1mm 0 0;position:relative;}
+.bars .b span{position:absolute;bottom:-4mm;left:0;right:0;text-align:center;font-size:6.3pt;color:var(--mute);}
+.bars .b em{position:absolute;top:-3.6mm;left:0;right:0;text-align:center;font-size:6.3pt;font-style:normal;font-weight:700;}
+/* ---------- misc ---------- */
+.qlist{list-style:none;padding:0;margin:0;}
+.qlist li{display:flex;gap:2.5mm;padding:1.5mm 0;border-bottom:1px dotted #cbd5e1;font-size:8.8pt;}
+.qlist li .bx{width:3.6mm;height:3.6mm;border:1.3px solid #64748b;border-radius:.8mm;flex:none;margin-top:.8mm;}
+.qlist li .q{flex:1;}
+.qlist li .q i{display:block;font-style:normal;color:var(--mute);font-size:7.8pt;}
+.qgrp{font-weight:800;font-size:10pt;margin:3.5mm 0 1mm;padding:1mm 3mm;border-radius:2mm;color:#fff;display:inline-block;}
+.lined{height:228mm;display:flex;flex-direction:column;}
+.lined i{flex:1;border-bottom:.3mm solid #cbd5e1;}
+.toc{display:grid;grid-template-columns:1fr 1fr;gap:1mm 8mm;}
+.toc div{display:flex;gap:2mm;border-bottom:1px dotted #cbd5e1;padding:1.3mm 0;font-size:9.5pt;}
+.toc div b{width:8mm;color:var(--d2);}
+.toc div span.p{margin-inline-start:auto;color:var(--mute);}
+.rm{display:grid;grid-template-columns:22mm 1fr;gap:0;}
+.rm .ph0{border-inline-end:3px solid #cbd5e1;padding:3mm 0;text-align:center;position:relative;}
+.rm .ph0 .c{width:13mm;height:13mm;border-radius:50%;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:12pt;}
+.rm .bx2{padding:2.5mm 4mm;margin:2mm 0;border-radius:3mm;background:var(--bg);border:1px solid var(--line);}
+.risk{border-radius:3mm;padding:3mm;border:1px solid var(--line);border-top:4px solid var(--open);}
+.risk b{display:block;margin-bottom:1mm;}
+.lv{font-size:7pt;font-weight:800;padding:.2mm 1.6mm;border-radius:3mm;}
+</style>
+</head>
+<body>
+
+<!-- ======================= 1. COVER ======================= -->
+<section class="page cover">
+  <svg class="orbit" viewBox="0 0 200 200" fill="none">
+    <circle cx="100" cy="100" r="92" stroke="rgba(255,255,255,.10)" stroke-width="1"/>
+    <circle cx="100" cy="100" r="66" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+    <circle cx="100" cy="100" r="38" stroke="rgba(253,230,138,.35)" stroke-width="1.2"/>
+    <circle cx="100" cy="100" r="15" fill="#f5b301"/>
+    <circle cx="100" cy="8" r="5" fill="#6d28d9"/><circle cx="192" cy="100" r="5" fill="#0891b2"/>
+    <circle cx="100" cy="192" r="5" fill="#2563eb"/><circle cx="8" cy="100" r="5" fill="#0d9488"/>
+    <circle cx="147" cy="53" r="4.5" fill="#d97706"/><circle cx="53" cy="147" r="4.5" fill="#db2777"/>
+    <circle cx="147" cy="147" r="4.5" fill="#4f46e5"/><circle cx="53" cy="53" r="4.5" fill="#16a34a"/>
+    <circle cx="166" cy="100" r="3.5" fill="#b91c1c"/>
+  </svg>
+  <div style="font-size:10pt;color:#fde68a;font-weight:700;letter-spacing:1px">מסמך אפיון דינמי · טיוטה לעבודה</div>
+  <div class="brand">METATRON AI</div>
+  <div class="title">משרד תיווך שמנוהל ע"י סוכני בינה מלאכותית</div>
+  <div class="lead">כל העבודה האלגוריתמית של משרד התיווך, מאיתור מוכרים ועד התאמת נכס לקונה, מבוצעת ע"י צוות סוכני AI שמאורגן במחלקות.
+    העבודה הפיזית והאנושית, כלומר גיוס, הצגה, מענה טלפוני ומשא ומתן, נשארת אצל המתווכים.</div>
+  <div class="meta">
+    <div><b>v0.2</b>גרסה</div>
+    <div><b>18.10.2026</b>תאריך</div>
+    <div><b>תכנון · לפני פיתוח</b>סטטוס</div>
+    <div><b>SaaS · Multi-tenant</b>מודל</div>
+    <div><b>Python · CrewAI · React Native</b>סטאק</div>
+  </div>
+</section>
+
+<!-- ======================= 2. TOC ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">◎</div><div class="grow"><h1>תוכן עניינים</h1><div class="sub">איך לקרוא את המסמך</div></div></div>
+  <div class="toc">
+    <div><b>01</b>חזון ועקרונות<span class="p">3</span></div>
+    <div><b>02</b>Workflow — צד המוכר<span class="p">4</span></div>
+    <div><b>03</b>Workflow — צד הקונה<span class="p">5</span></div>
+    <div><b>04</b>מכונות מצבים<span class="p">6</span></div>
+    <div><b>05</b>10 המחלקות (סוכני AI)<span class="p">7–8</span></div>
+    <div><b>06</b>ארכיטקטורה טכנית<span class="p">9</span></div>
+    <div><b>07</b>טלפוניה, קול ומודלי שפה<span class="p">10</span></div>
+    <div><b>08</b>סוגי משרד ו-Multi-tenancy<span class="p">11</span></div>
+    <div><b>09</b>הרשאות ובעלות על מידע<span class="p">12</span></div>
+    <div><b>10</b>רשת שיתופי פעולה <span class="tag t-idea" style="font-size:6.5pt">חדש</span><span class="p">13–14</span></div>
+    <div><b>11</b>מה קיים ומה חדש<span class="p">15</span></div>
+    <div><b>12</b>יומן החלטות<span class="p">16–17</span></div>
+    <div><b>13</b>מוקאפים לדשבורד (להמחשה)<span class="p">18–24</span></div>
+    <div><b>14</b>Roadmap<span class="p">25</span></div>
+    <div><b>15</b>סיכונים ו-Compliance<span class="p">26</span></div>
+    <div><b>16</b>שאלות פתוחות<span class="p">27–28</span></div>
+    <div><b>17</b>רעיונות לבדיקה<span class="p">29</span></div>
+    <div><b>18</b>דפי הערות<span class="p">30–31</span></div>
+  </div>
+
+  <h2>מקרא סטטוסים</h2>
+  <div class="grid2">
+    <div class="card"><span class="tag t-ok">✓ הוחלט</span><p class="small" style="margin-top:1.5mm">החלטה שסגרנו יחד בשיחה. משנים רק אם יש סיבה טובה.</p></div>
+    <div class="card"><span class="tag t-wip">● הצעה טכנית</span><p class="small" style="margin-top:1.5mm">המלצה שלי שעוד לא אושרה במפורש. פתוחה לדיון.</p></div>
+    <div class="card"><span class="tag t-open">? שאלה פתוחה</span><p class="small" style="margin-top:1.5mm">נושא שעוד לא טיפלנו בו וצריך להחליט עליו לפני או במהלך הפיתוח.</p></div>
+    <div class="card"><span class="tag t-idea">✦ רעיון</span><p class="small" style="margin-top:1.5mm">כיוון שכדאי לבדוק. לא חלק מההיקף עד שנחליט אחרת.</p></div>
+  </div>
+
+  <h2>סימון מי מבצע</h2>
+  <div class="grid2">
+    <div class="card"><span class="tag t-ai">🤖 סוכן AI</span><p class="small" style="margin-top:1.5mm">שלב שמבוצע אוטומטית ע"י סוכן CrewAI.</p></div>
+    <div class="card"><span class="tag t-hu">👤 מתווך אנושי</span><p class="small" style="margin-top:1.5mm">שלב פיזי או אנושי: פגישה, הצגה, מענה טלפוני, משא ומתן או אישור.</p></div>
+  </div>
+
+  <div class="callout" style="margin-top:6mm">
+    <b>זהו מסמך חי.</b> הוא מסכם את מה שהחלטנו עד עכשיו, מה שעוד פתוח ורעיונות לבדיקה. המוקאפים בעמודים 18–24 <b>לא מחייבים</b>. הם נועדו רק להמחיש רעיונות ואינם הדשבורד הסופי, שיעוצב בהמשך ב-Google Stitch.
+    המקור של המסמך נמצא ב-<code>docs/spec/metatron-spec.html</code>, והזיכרון של הפרויקט ב-<code>docs/</code> (Obsidian Vault).
+    <div style="margin-top:2mm"><b>חדש ב-v0.2:</b> פרק רשת שיתופי פעולה (עמודים 13–14), מחלקה 9, מוקאפ 7, החלטות 24–29, וגופן Heebo.</div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 3. VISION ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">01</div><div class="grow"><h1>חזון ועקרונות</h1><div class="sub">מה אנחנו בונים ולמה</div></div><span class="tag t-ok">✓ הוחלט</span></div>
+
+  <div class="callout" style="font-size:11pt;line-height:1.6">
+    <b>במשפט אחד:</b> פלטפורמת SaaS שהופכת כל משרד תיווך, מסוליסט ועד משרד עם צוות, ל"משרד מוגבר". צוות סוכני AI עושה את כל העבודה החוזרת והאלגוריתמית, והמתווכים מתפנים לעבודה שרק בני אדם יכולים לעשות.
+  </div>
+
+  <div class="grid2" style="margin-top:5mm">
+    <div class="card" style="border-top:4px solid var(--d2)">
+      <h3>🤖 מה עושים סוכני ה-AI</h3>
+      <ul class="small">
+        <li>מאתרים מוכרים פוטנציאליים, ממודעות פרטיות, רשימות ומאגרים</li>
+        <li>פונים בוואטסאפ ובשיחה קולית כדי לקבוע פגישת גיוס</li>
+        <li>מתאמים פגישות וסיורים לפי היומן והכללים של המתווך</li>
+        <li>עושים Follow-up למוכרים שלא גויסו</li>
+        <li>מפרסמים נכסים בכל הערוצים ומודדים ביצועים</li>
+        <li>מתמללים שיחות ובונים פרופיל קונה ב-CRM</li>
+        <li>מחפשים התאמות בתוך המאגר ומחוצה לו ומנהלים את הלופ מול הקונה</li>
+        <li>מסייעים במשא ומתן: הצעות, עסקאות השוואה וטיוטות</li>
+        <li>שואבים נכסי שיתופי פעולה מקבוצות וואטסאפ, ומפיצים את הנכסים שלנו לרשת ולקבוצות</li>
+        <li>סוכן-על מפקח על הכל: SLA, תקיעות ודוחות</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:4px solid var(--human)">
+      <h3>👤 מה עושים המתווכים</h3>
+      <ul class="small">
+        <li>מאשרים קמפיין פנייה לפני שיוצאת פנייה כלשהי</li>
+        <li>נפגשים עם המוכר ומגייסים את הנכס</li>
+        <li>מזינים את פרטי הנכס דרך האפליקציה</li>
+        <li>עונים לשיחות נכנסות מקונים (השיחות מוקלטות ומתומללות)</li>
+        <li>מציגים נכסים בסיורים</li>
+        <li>מדווחים תוצאה של כל פגישה וסיור</li>
+        <li>מובילים את המשא ומתן וסוגרים עסקה</li>
+        <li>מגדירים לסוכנים כללים: זמינות, תוכנית Follow-up ותסריטים</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>עקרונות יסוד</h2>
+  <div class="grid3">
+    <div class="card soft"><b>Human-in-the-loop</b><div class="small">אין פנייה יוצאת בלי אישור. דיווח של המתווך הוא שער המעבר בין שלבים. מחירים והתחייבויות קובע רק אדם.</div></div>
+    <div class="card soft"><b>SaaS מהיום הראשון</b><div class="small">המערכת מתאימה לכל סוג משרד: סוליסט, שותפים ומשרד עם מנהל ומתווכים.</div></div>
+    <div class="card soft"><b>הרשאות לפי actor</b><div class="small">כל סוכן AI פועל בשם המתווך שהפעיל אותו, ורואה רק מה שהמתווך הזה רשאי לראות.</div></div>
+    <div class="card soft"><b>Opt-out גלובלי</b><div class="small">כשאיש קשר מבקש "תפסיקו", כל המחלקות מפסיקות לפנות אליו מיד.</div></div>
+    <div class="card soft"><b>Adapter לכל ערוץ</b><div class="small">ערוץ פרסום או תקשורת חדש מתווסף כ-adapter, בלי לגעת בסוכנים.</div></div>
+    <div class="card soft"><b>Audit מלא</b><div class="small">כל פעולה של סוכן נרשמת: מה עשה, בשם מי, ומתי.</div></div>
+  </div>
+
+  <h2>למי זה מיועד</h2>
+  <div class="chips" style="gap:2mm">
+    <span class="chip" style="font-size:8.5pt">מתווך סוליסט</span>
+    <span class="chip" style="font-size:8.5pt">שותפים זהים</span>
+    <span class="chip" style="font-size:8.5pt">שותפים לא זהים</span>
+    <span class="chip" style="font-size:8.5pt">משרד עם מנהל/ים ומתווכים</span>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 4. SELLER FLOW ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">02</div><div class="grow"><h1>Workflow — צד המוכר</h1><div class="sub">מאיתור מוכר ועד נכס בשיווק</div></div><span class="tag t-ok">✓ הוחלט</span></div>
+  <div class="flow">
+    <div class="step"><div class="bar" style="background:var(--d1)">1<small>AI</small></div><div class="body"><b>איתור מוכרים (Sourcing)</b><div>סריקת מודעות פרטיות (יד2, מדלן, קומו, פייסבוק מרקטפלייס), ייבוא רשימות קיימות, הפניות ומאגרים חיצוניים. אחר כך דה-דופליקציה והשלמת פרטים.</div></div></div>
+    <div class="arrow">▼</div>
+    <div class="step"><div class="bar" style="background:var(--human)">2<small>אדם</small></div><div class="body"><b>אישור קמפיין</b> <span class="tag t-hu">שער אנושי</span><div>הסוכן מציג למתווך את רשימת היעד ואת התסריט. <b>בלי אישור המתווך לא יוצאת אף פנייה.</b></div></div></div>
+    <div class="arrow">▼</div>
+    <div class="step"><div class="bar" style="background:var(--d2)">3<small>AI</small></div><div class="body"><b>פנייה קרה: וואטסאפ, ואחריו שיחה קולית</b><div>הודעת פתיחה בוואטסאפ. כשהמוכר מסכים לשיחה, <b>סוכן קולי (Voice AI)</b> מתקשר: "שלום, אני מדבר מהמשרד של…". המטרה היחידה של השיחה היא לקבוע פגישה.</div></div></div>
+    <div class="arrow">▼</div>
+    <div class="step"><div class="bar" style="background:var(--d3)">4<small>AI</small></div><div class="body"><b>תיאום פגישה (Scheduling)</b><div>הסוכן קובע יום ושעה לפי כללי הזמינות שהמתווך הגדיר מראש: ימים, שעות, אזורים, זמן נסיעה ומרווחים. התזכורות נשלחות לשני הצדדים.</div></div></div>
+    <div class="arrow">▼</div>
+    <div class="step"><div class="bar" style="background:var(--human)">5<small>אדם</small></div><div class="body"><b>פגישת גיוס בבית המוכר</b><div>המתווך נפגש עם המוכר, ובסוף הפגישה <b>מדווח תוצאה באפליקציה</b>. הדיווח הזה מעביר את הטיפול לשלב הבא.</div></div></div>
+    <div class="arrow">▼</div>
+    <div class="branch">
+      <div>
+        <div class="step" style="border-color:#86efac"><div class="bar" style="background:var(--d7)">✓</div><div class="body"><b>גויס</b><div>המתווך מזין את פרטי הנכס באפליקציה.</div></div></div>
+        <div class="arrow">▼</div>
+        <div class="step"><div class="bar" style="background:var(--d5)">6<small>AI</small></div><div class="body"><b>שיווק</b><div>בדיקת נתונים, טקסטים מותאמים לכל ערוץ, פרסום בכל הערוצים ומדידת ביצועים. ממשיכים לצד הקונה ←</div></div></div>
+      </div>
+      <div>
+        <div class="step" style="border-color:#fcd34d"><div class="bar" style="background:var(--d4)">✗</div><div class="body"><b>לא גויס</b><div>שתי אפשרויות:</div></div></div>
+        <div class="arrow">▼</div>
+        <div class="grid2" style="gap:2mm">
+          <div class="step"><div class="bar" style="background:var(--d4);width:9mm;font-size:10pt">↻</div><div class="body"><b>Follow-up</b><div>לפי תוכנית המתווך: תאריכים, ערוצים וטון. ממשיך עד שנקבעת פגישה חדשה.</div></div></div>
+          <div class="step"><div class="bar" style="background:#94a3b8;width:9mm;font-size:10pt">■</div><div class="body"><b>סגירת חיזורים</b><div>סטטוס סופי. לא פונים יותר.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:4mm"><b>נקודה חשובה:</b> בכל שלב המוכר יכול לבקש להפסיק (opt-out), ואז כל הפניות אליו נעצרות מיד בכל המחלקות.</div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 5. BUYER FLOW ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">03</div><div class="grow"><h1>Workflow — צד הקונה</h1><div class="sub">משיחה נכנסת ועד עסקה, כולל לופ האיתור</div></div><span class="tag t-ok">✓ הוחלט</span></div>
+  <div class="flow">
+    <div class="step"><div class="bar" style="background:var(--human)">7<small>אדם</small></div><div class="body"><b>שיחה נכנסת: המתווך עונה</b><div>הפרסום מייצר שיחות. השיחה מגיעה ל<b>מספר וירטואלי</b> של המתווך ומועברת לנייד שלו. <b>כל שיחה מוקלטת בענן.</b></div></div></div>
+    <div class="arrow">▼</div>
+    <div class="step"><div class="bar" style="background:var(--d6)">8<small>AI</small></div><div class="body"><b>Call Intelligence</b><div>הסוכן מתמלל את השיחה, מחלץ פרופיל קונה (תקציב, אזור, חדרים, דרישות חובה ורצויות), יוצר או מעדכן את הלקוח ב-CRM ושולח למתווך סיכום של השיחה.</div></div></div>
+    <div class="arrow">▼</div>
+    <div class="loopbox">
+      <div class="lbl">↻ לופ איתור לקונה</div>
+      <div class="step" style="margin-top:1mm"><div class="bar" style="background:var(--d7)">9<small>AI</small></div><div class="body"><b>התאמות ← שליחה ← התכתבות</b><div>הסוכן מחפש התאמות בתוך המאגר ומחוצה לו, שולח לקונה בוואטסאפ ומנהל איתו שיחה: שאלות, עוד תמונות ומשוב.</div></div></div>
+      <div class="arrow">▼</div>
+      <div class="step"><div class="bar" style="background:var(--d3)">⏱<small>AI</small></div><div class="body"><b>תיאום סיור</b><div>אותו סוכן תיאום מהצד של המוכר, לפי היומן והכללים של המתווך.</div></div></div>
+      <div class="arrow">▼</div>
+      <div class="step"><div class="bar" style="background:var(--human)">10<small>אדם</small></div><div class="body"><b>סיור בנכס, ודיווח תוצאה</b><div>המתווך מציג את הנכס ומדווח באפליקציה.</div></div></div>
+      <div class="arrow">▼</div>
+      <div class="branch">
+        <div class="step" style="border-color:#fca5a5"><div class="bar" style="background:var(--d8)">€</div><div class="body"><b>מעוניין ← הצעה ← משא ומתן</b><div>המתווך מוביל את המשא ומתן. הסוכן <b>Deal Assist</b> מסייע: מתעד הצעות, מביא עסקאות השוואה, מנסח הודעות ומזכיר משימות.</div></div></div>
+        <div class="step" style="border-color:#86efac"><div class="bar" style="background:var(--d7)">↺</div><div class="body"><b>לא מעוניין ← חזרה ללופ</b><div>המשוב של הקונה ("קטן מדי", "קומה נמוכה") מעדכן את הפרופיל שלו, והסוכן מחפש שוב.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:5mm">
+    <div class="card" style="border-top:4px solid var(--open)"><b>הלופ נעצר רק כאשר:</b>
+      <ul class="small" style="margin-top:1mm"><li>הקונה מבקש להפסיק לקבל נכסים, <b>או</b></li><li>המתווך עוצר את הלופ ידנית</li></ul>
+      <div class="small mute">עסקה שנסגרה כמובן גם היא סוגרת את הלופ.</div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>התאמות "מחוץ למאגר"</b> <span class="tag t-open">? פתוח</span>
+      <div class="small" style="margin-top:1mm">כשנמצא נכס שאינו במאגר שלנו ומתאים לקונה: האם הוא נכנס אוטומטית ל<b>Sourcing / Outreach</b> כדי לגייס אותו? (ראו שאלות פתוחות)</div>
+    </div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 6. STATE MACHINES ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">04</div><div class="grow"><h1>מכונות מצבים</h1><div class="sub">כל מעבר בין מצבים הוא אירוע שמפעיל את המחלקה הבאה</div></div><span class="tag t-wip">● הצעה טכנית</span></div>
+
+  <h2>מוכר (Seller)</h2>
+  <div class="card">
+    <div class="sm">
+      <span class="st" style="background:var(--d1)">sourced</span><span class="ar">→</span>
+      <span class="st" style="background:var(--human)">campaign_approved</span><span class="ar">→</span>
+      <span class="st" style="background:var(--d2)">wa_contacted</span><span class="ar">→</span>
+      <span class="st" style="background:var(--d2)">call_consented</span><span class="ar">→</span>
+      <span class="st" style="background:var(--d2)">called</span><span class="ar">→</span>
+      <span class="st" style="background:var(--d3)">meeting_booked</span><span class="ar">→</span>
+      <span class="st" style="background:var(--human)">meeting_held</span>
+    </div>
+    <div style="display:flex;gap:4mm;margin-top:3mm;direction:ltr">
+      <div style="flex:1;border-left:3px solid var(--d7);padding-left:3mm">
+        <div class="sm"><span class="st" style="background:var(--d7)">recruited</span><span class="ar">→</span><span class="st" style="background:var(--d5)">listed</span><span class="ar">→</span><span class="st" style="background:var(--d5)">marketing</span><span class="ar">→</span><span class="st" style="background:#0f172a">sold</span></div>
+      </div>
+      <div style="flex:1;border-left:3px solid var(--d4);padding-left:3mm">
+        <div class="sm"><span class="st" style="background:var(--d4)">not_recruited</span><span class="ar">→</span><span class="st" style="background:var(--d4)">follow_up</span><span class="ar">→</span><span class="st" style="background:var(--d3)">meeting_booked</span><span class="ar">|</span><span class="st" style="background:#94a3b8">closed_lost</span></div>
+      </div>
+    </div>
+    <div class="sm" style="margin-top:3mm"><span class="mini" style="direction:rtl">מכל מצב אפשר לעבור ל:</span><span class="st" style="background:#ef4444">opted_out</span></div>
+  </div>
+
+  <h2>קונה (Buyer)</h2>
+  <div class="card">
+    <div class="sm">
+      <span class="st" style="background:var(--human)">call_received</span><span class="ar">→</span>
+      <span class="st" style="background:var(--d6)">profiled</span><span class="ar">→</span>
+      <span class="st" style="background:var(--d7)">matching</span><span class="ar">→</span>
+      <span class="st" style="background:var(--d7)">matches_sent</span><span class="ar">→</span>
+      <span class="st" style="background:var(--d3)">tour_booked</span><span class="ar">→</span>
+      <span class="st" style="background:var(--human)">tour_held</span>
+    </div>
+    <div style="display:flex;gap:4mm;margin-top:3mm;direction:ltr">
+      <div style="flex:1;border-left:3px solid var(--d8);padding-left:3mm">
+        <div class="sm"><span class="st" style="background:var(--d8)">interested</span><span class="ar">→</span><span class="st" style="background:var(--d8)">offer</span><span class="ar">→</span><span class="st" style="background:var(--d8)">negotiation</span><span class="ar">→</span><span class="st" style="background:#0f172a">deal_closed</span></div>
+      </div>
+      <div style="flex:1;border-left:3px solid var(--d7);padding-left:3mm">
+        <div class="sm"><span class="st" style="background:var(--d7)">not_interested</span><span class="ar">→</span><span class="st" style="background:var(--d7)">matching ↻</span></div>
+      </div>
+    </div>
+    <div class="sm" style="margin-top:3mm"><span class="mini" style="direction:rtl">יציאה מהלופ:</span><span class="st" style="background:#ef4444">buyer_opt_out</span><span class="st" style="background:#ef4444">agent_stopped</span></div>
+  </div>
+
+  <h2>איך זה עובד</h2>
+  <div class="grid3">
+    <div class="card soft"><b>אירוע</b><div class="small">כל מעבר מצב מייצר אירוע, למשל <code>seller.meeting_held</code>, ב-Event Bus.</div></div>
+    <div class="card soft"><b>תגובה</b><div class="small">המחלקה הרלוונטית "מאזינה" לאירוע ומתחילה לעבוד. סוכן-העל רואה את כל האירועים.</div></div>
+    <div class="card soft"><b>שערים אנושיים</b><div class="small">מצבים אפורים (👤) מחכים לדיווח של מתווך. אם הדיווח מתעכב, סוכן-העל שולח תזכורת או מסלים.</div></div>
+  </div>
+  <div class="callout" style="margin-top:4mm"><b>יתרון:</b> בכל רגע אפשר לדעת בדיוק איפה כל מוכר וכל קונה נמצא. מכאן מגיעים המשפכים והדוחות בדשבורד.</div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 7. DEPARTMENTS A ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">05</div><div class="grow"><h1>המחלקות (א')</h1><div class="sub">כל מחלקה = Crew של סוכני CrewAI עם תחום אחריות מוגדר</div></div><span class="tag t-ok">✓ הוחלט</span></div>
+
+  <div class="dept" style="margin-bottom:3.5mm">
+    <div class="hd" style="background:linear-gradient(90deg,var(--d0),#8b5cf6)"><div class="no">0</div><b>סוכן-על</b><span>Orchestrator</span></div>
+    <div class="bd grid2" style="gap:2mm 6mm">
+      <div>
+        <div class="row"><span class="k">תפקיד</span><span>עוקב אחרי כל המשימות בכל המחלקות: מנתב, אוכף SLA, מסלים לאדם ומפיק דוח יומי לכל מתווך ולמנהל.</span></div>
+        <div class="row"><span class="k">טריגר</span><span>כל אירוע ב-Event Bus, ובנוסף בדיקה מתוזמנת (cron)</span></div>
+      </div>
+      <div>
+        <div class="row"><span class="k">סוכנים</span><div class="chips"><span class="chip">COO Agent</span><span class="chip">SLA Monitor</span><span class="chip">Reporter</span></div></div>
+        <div class="row"><span class="k">KPI</span><span>הפרות SLA, משימות פתוחות לכל מתווך, המרה בכל שלב במשפך</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="dept"><div class="hd" style="background:var(--d1)"><div class="no">1</div><b>איתור מוכרים</b><span>Sourcing</span></div>
+      <div class="bd">
+        <div class="row"><span class="k">תפקיד</span><span>מאתר מוכרים פוטנציאליים, מסיר כפילויות ומשלים פרטים</span></div>
+        <div class="row"><span class="k">טריגר</span><span>סריקה מתוזמנת, ייבוא קובץ, הפניה</span></div>
+        <div class="row"><span class="k">כלים</span><div class="chips"><span class="chip">Playwright</span><span class="chip">CSV/Excel</span><span class="chip">מאגרים חיצוניים</span></div></div>
+        <div class="row"><span class="k">פלט</span><span><code>sellers_pipeline</code></span></div>
+        <div class="row"><span class="k">KPI</span><span>מוכרים חדשים ביום, אחוז כפילויות, כיסוי טלפונים</span></div>
+      </div></div>
+    <div class="dept"><div class="hd" style="background:var(--d2)"><div class="no">2</div><b>פנייה קרה</b><span>Outreach</span></div>
+      <div class="bd">
+        <div class="row"><span class="k">תפקיד</span><span>מבקש אישור לקמפיין, שולח וואטסאפ ומבצע שיחה קולית (Voice AI) כדי לקבוע פגישה</span></div>
+        <div class="row"><span class="k">טריגר</span><span><code>campaign.approved</code></span></div>
+        <div class="row"><span class="k">כלים</span><div class="chips"><span class="chip">WhatsApp Cloud API</span><span class="chip">Voice AI</span><span class="chip">טלפוניה</span></div></div>
+        <div class="row"><span class="k">פלט</span><span>מוכר שהסכים לפגישה ← Scheduling</span></div>
+        <div class="row"><span class="k">KPI</span><span>אחוז מענה, אחוז הסכמה לשיחה, פגישות ל-100 פניות</span></div>
+      </div></div>
+    <div class="dept"><div class="hd" style="background:var(--d3)"><div class="no">3</div><b>תיאום פגישות</b><span>Scheduling</span></div>
+      <div class="bd">
+        <div class="row"><span class="k">תפקיד</span><span>שירות משותף לפגישות גיוס ולסיורים. עובד לפי כללי הזמינות של המתווך</span></div>
+        <div class="row"><span class="k">טריגר</span><span><code>meeting.requested</code> / <code>tour.requested</code></span></div>
+        <div class="row"><span class="k">כלים</span><div class="chips"><span class="chip">Google Calendar</span><span class="chip">tasks</span><span class="chip">WhatsApp</span></div></div>
+        <div class="row"><span class="k">פלט</span><span>פגישה ביומן ותזכורות לשני הצדדים</span></div>
+        <div class="row"><span class="k">KPI</span><span>זמן עד קביעה, אחוז אי-הגעה (no-show)</span></div>
+      </div></div>
+    <div class="dept"><div class="hd" style="background:var(--d4)"><div class="no">4</div><b>Follow-up</b><span>Nurturing</span></div>
+      <div class="bd">
+        <div class="row"><span class="k">תפקיד</span><span>חוזר למוכרים שלא גויסו לפי תוכנית שהמתווך הגדיר: תאריכים, ערוצים וטון</span></div>
+        <div class="row"><span class="k">טריגר</span><span><code>seller.not_recruited</code></span></div>
+        <div class="row"><span class="k">כלים</span><div class="chips"><span class="chip">WhatsApp</span><span class="chip">SMS</span><span class="chip">Voice</span></div></div>
+        <div class="row"><span class="k">פלט</span><span>פגישה חדשה, או <code>closed_lost</code></span></div>
+        <div class="row"><span class="k">KPI</span><span>אחוז חזרה לפגישה, גיוסים שהגיעו מ-Follow-up</span></div>
+      </div></div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 8. DEPARTMENTS B ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">05</div><div class="grow"><h1>המחלקות (ב')</h1><div class="sub">שיווק, מודיעין שיחות, התאמות ועסקאות</div></div><span class="tag t-ok">✓ הוחלט</span></div>
+  <div class="grid2">
+    <div class="dept"><div class="hd" style="background:var(--d5)"><div class="no">5</div><b>נכסים ושיווק</b><span>Listing &amp; Marketing</span></div>
+      <div class="bd">
+        <div class="row"><span class="k">תפקיד</span><span>בודק את נתוני הנכס, כותב טקסט מותאם לכל ערוץ, מפרסם ומודד ביצועים</span></div>
+        <div class="row"><span class="k">טריגר</span><span><code>property.recruited</code></span></div>
+        <div class="row"><span class="k">ערוצים</span><div class="chips"><span class="chip">יד2</span><span class="chip">מדלן</span><span class="chip">קיז</span><span class="chip">OnMap</span><span class="chip">קומו</span><span class="chip">Craigslist</span><span class="chip">פייסבוק אורגני/קבוצות/ממומן</span><span class="chip">אינסטגרם</span><span class="chip">TikTok</span><span class="chip">YouTube</span><span class="chip">אתר המשרד</span><span class="chip">WhatsApp Catalog</span></div></div>
+        <div class="row"><span class="k">KPI</span><span>זמן עד פרסום, לידים לנכס לכל ערוץ, עלות לליד</span></div>
+      </div></div>
+    <div class="dept"><div class="hd" style="background:var(--d6)"><div class="no">6</div><b>מודיעין שיחות</b><span>Call Intelligence</span></div>
+      <div class="bd">
+        <div class="row"><span class="k">תפקיד</span><span>מתמלל שיחות נכנסות, מחלץ פרופיל קונה, מעדכן את ה-CRM ושולח סיכום למתווך</span></div>
+        <div class="row"><span class="k">טריגר</span><span><code>call.recorded</code> (webhook מהמרכזייה)</span></div>
+        <div class="row"><span class="k">כלים</span><div class="chips"><span class="chip">מרכזיית ענן</span><span class="chip">STT עברית</span><span class="chip">Claude Sonnet</span></div></div>
+        <div class="row"><span class="k">פלט</span><span><code>clients</code> + <code>calls</code></span></div>
+        <div class="row"><span class="k">KPI</span><span>אחוז שיחות שהפכו לפרופיל אוטומטית, אחוז תיקונים של המתווך</span></div>
+      </div></div>
+    <div class="dept"><div class="hd" style="background:var(--d7)"><div class="no">7</div><b>התאמות ולופ קונה</b><span>Matching &amp; Buyer Loop</span></div>
+      <div class="bd">
+        <div class="row"><span class="k">תפקיד</span><span>מחפש התאמות בתוך המאגר ומחוצה לו, שולח לקונה, מתכתב איתו, מעדכן את הפרופיל לפי המשוב וממשיך בלופ עד שמישהו עוצר אותו</span></div>
+        <div class="row"><span class="k">טריגר</span><span><code>buyer.profiled</code>, <code>property.listed</code>, <code>tour.not_interested</code>, cron</span></div>
+        <div class="row"><span class="k">כלים</span><div class="chips"><span class="chip">matching.ts → Python</span><span class="chip">pgvector</span><span class="chip">מאגר שוק</span><span class="chip">WhatsApp</span></div></div>
+        <div class="row"><span class="k">KPI</span><span>אחוז התאמות שהפכו לסיור, סיורים לקונה, זמן עד עסקה</span></div>
+      </div></div>
+    <div class="dept"><div class="hd" style="background:var(--d8)"><div class="no">8</div><b>סיוע בעסקה</b><span>Deal Assist</span></div>
+      <div class="bd">
+        <div class="row"><span class="k">תפקיד</span><span>המתווך מוביל את המשא ומתן, והסוכן מסייע: מתעד הצעות, מביא עסקאות השוואה, מנסח טיוטות ומזכיר משימות</span></div>
+        <div class="row"><span class="k">טריגר</span><span><code>tour.interested</code></span></div>
+        <div class="row"><span class="k">כלים</span><div class="chips"><span class="chip">deals</span><span class="chip">נתוני עסקאות</span></div></div>
+        <div class="row"><span class="k">פלט</span><span>עסקה מתועדת, ורישום ב-<code>deals_income</code></span></div>
+        <div class="row"><span class="k">KPI</span><span>אחוז הצעות שהפכו לעסקה, משך מחזור העסקה</span></div>
+      </div></div>
+  </div>
+
+  <div class="dept" style="margin-top:3.5mm">
+    <div class="hd" style="background:linear-gradient(90deg,var(--d9),#d946ef)"><div class="no">9</div><b>רשת שיתופי פעולה</b><span>Collaboration Network</span><span class="tag t-idea" style="margin-inline-start:auto;background:#fff">חדש ב-v0.2 · פרק 10</span></div>
+    <div class="bd grid2" style="gap:1mm 6mm">
+      <div>
+        <div class="row"><span class="k">תפקיד</span><span>שואב נכסי שת"פ מקבוצות וואטסאפ שהמתווך בחר, ומפיץ את הנכסים שלנו לרשת METATRON ולקבוצות</span></div>
+        <div class="row"><span class="k">סוכנים</span><div class="chips"><span class="chip">Collab Ingestion</span><span class="chip">Collab Publisher</span></div></div>
+      </div>
+      <div>
+        <div class="row"><span class="k">טריגר</span><span><code>wa.group_message</code>, <code>property.collab_opened</code>, cron יומי</span></div>
+        <div class="row"><span class="k">KPI</span><span>נכסי שת"פ שנקלטו, סיורים מנכסי שת"פ, עסקאות שת"פ</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>מפת קשרים בין המחלקות</h2>
+  <svg viewBox="0 0 700 220" style="width:100%;height:50mm" font-family="Heebo" font-size="12">
+    <defs><marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#94a3b8"/></marker></defs>
+    <g stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ah)" fill="none">
+      <path d="M600,48 L562,48"/><path d="M470,48 L432,48"/><path d="M340,48 L302,48"/><path d="M210,48 L172,48"/>
+      <path d="M255,66 L255,93"/><path d="M300,110 L385,110 L385,68"/>
+      <path d="M125,66 L125,148"/>
+      <path d="M170,168 L208,168"/><path d="M300,168 L338,168"/><path d="M430,168 L468,168"/>
+      <path d="M385,186 C385,210 255,210 255,188"/>
+      <path d="M645,125 L645,138 L275,138 L275,148"/>
+    </g>
+    <g font-size="9.5" fill="#64748b" text-anchor="middle">
+      <text x="191" y="42">גויס</text><text x="232" y="84">לא גויס</text>
+      <text x="155" y="112" text-anchor="start">שיחות נכנסות</text><text x="320" y="216">לא מעוניין ↻</text><text x="470" y="133">נכסי שת"פ</text>
+    </g>
+    <g font-weight="700" fill="#fff" text-anchor="middle">
+      <rect x="600" y="30" width="90" height="36" rx="8" fill="#0891b2"/><text x="645" y="53">Sourcing</text>
+      <rect x="470" y="30" width="90" height="36" rx="8" fill="#2563eb"/><text x="515" y="53">Outreach</text>
+      <rect x="340" y="30" width="90" height="36" rx="8" fill="#0d9488"/><text x="385" y="53">Scheduling</text>
+      <rect x="210" y="30" width="90" height="36" rx="8" fill="#475569"/><text x="255" y="53">פגישת גיוס</text>
+      <rect x="80" y="30" width="90" height="36" rx="8" fill="#db2777"/><text x="125" y="53">Marketing</text>
+      <rect x="210" y="95" width="90" height="30" rx="8" fill="#d97706"/><text x="255" y="115">Follow-up</text>
+      <rect x="80" y="150" width="90" height="36" rx="8" fill="#4f46e5"/><text x="125" y="173">Call Intel</text>
+      <rect x="210" y="150" width="90" height="36" rx="8" fill="#16a34a"/><text x="255" y="173">Matching</text>
+      <rect x="340" y="150" width="90" height="36" rx="8" fill="#475569"/><text x="385" y="173">סיור</text>
+      <rect x="470" y="150" width="90" height="36" rx="8" fill="#b91c1c"/><text x="515" y="173">Deal Assist</text>
+      <rect x="600" y="95" width="90" height="30" rx="8" fill="#a21caf"/><text x="645" y="115">Collab</text>
+    </g>
+    <text x="350" y="14" text-anchor="middle" fill="#6d28d9" font-weight="800">סוכן-העל רואה ומתזמר את כל החצים</text>
+  </svg>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 9. ARCHITECTURE ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">06</div><div class="grow"><h1>ארכיטקטורה טכנית</h1><div class="sub">שכבות המערכת, מהמשתמש ועד הערוצים החיצוניים</div></div><span class="tag t-wip">● הצעה טכנית</span></div>
+
+  <div class="layer" style="background:#eef2ff"><div class="ln" style="color:var(--d6)">ממשקים</div><div class="items">
+    <span class="box">📱 nadlan-pro (React Native), אפליקציית המתווך</span><span class="box">🖥 דשבורד Web, למנהל ולמתווך</span><span class="box">💬 WhatsApp</span><span class="box">☎ טלפון (מספר וירטואלי)</span></div></div>
+  <div style="text-align:center;color:#94a3b8">▼</div>
+  <div class="layer" style="background:#ecfeff"><div class="ln" style="color:var(--d1)">קליטה</div><div class="items">
+    <span class="box">FastAPI: REST + Webhooks</span><span class="box">Firestore listeners (on_snapshot)</span><span class="box">Webhooks: WhatsApp, מרכזייה, Voice AI</span></div></div>
+  <div style="text-align:center;color:#94a3b8">▼</div>
+  <div class="layer" style="background:#f5f3ff"><div class="ln" style="color:var(--d0)">תזמור</div><div class="items">
+    <span class="box">Event Bus: Redis Streams</span><span class="box">Workers: arq / Celery</span><span class="box"><b>Orchestrator Flow</b> (CrewAI Flow)</span><span class="box">10 Crews</span><span class="box">Scheduler (cron)</span></div></div>
+  <div style="text-align:center;color:#94a3b8">▼</div>
+  <div class="layer" style="background:#fef2f2;border:1.5px solid #fecaca"><div class="ln" style="color:var(--d8)">🔒 הרשאות</div><div class="items">
+    <span class="box"><b>authz</b> + Repositories</span><span class="box"><code>policy.yaml</code> משותף</span><span class="box">Firestore Security Rules</span><span class="box">לסוכן LLM אין גישה ישירה ל-DB</span></div></div>
+  <div style="text-align:center;color:#94a3b8">▼</div>
+  <div class="layer" style="background:#f0fdf4"><div class="ln" style="color:var(--d7)">נתונים</div><div class="items">
+    <span class="box"><b>Firestore</b>: מקור האמת ל-CRM</span><span class="box"><b>Postgres + pgvector</b>: מאגר שוק, audit, תמלילים, embeddings</span><span class="box">Object Storage: הקלטות ומדיה</span></div></div>
+  <div style="text-align:center;color:#94a3b8">▼</div>
+  <div class="layer" style="background:#fdf2f8"><div class="ln" style="color:var(--d5)">Adapters</div><div class="items">
+    <span class="box">WhatsApp</span><span class="box">Voice AI</span><span class="box">Telephony</span><span class="box">Calendar</span><span class="box">יד2</span><span class="box">מדלן</span><span class="box">FB/IG Graph</span><span class="box">fb-poster (קבוצות)</span><span class="box">WA Gateway (קבוצות וואטסאפ)</span><span class="box">TikTok</span><span class="box">YouTube</span><span class="box">אתר</span><span class="box">Scrapers</span></div></div>
+
+  <h2>סטאק</h2>
+  <table>
+    <tr><th>רכיב</th><th>בחירה</th><th>סטטוס</th></tr>
+    <tr><td>שפת Backend</td><td>Python 3.12 + FastAPI</td><td><span class="tag t-ok">✓ הוחלט</span> (Python)</td></tr>
+    <tr><td>מסגרת סוכנים</td><td>CrewAI (Crews + Flows), LLMs דרך LiteLLM</td><td><span class="tag t-ok">✓ הוחלט</span></td></tr>
+    <tr><td>אפליקציית מתווך</td><td>nadlan-pro: Expo / React Native + Firebase</td><td><span class="tag t-ok">✓ קיים</span></td></tr>
+    <tr><td>CRM / מקור אמת</td><td>Firestore (הקיים), עם הרחבה ל-<code>offices/</code></td><td><span class="tag t-ok">✓ הוחלט</span></td></tr>
+    <tr><td>Event Bus + Workers</td><td>Redis Streams + arq/Celery</td><td><span class="tag t-wip">● הצעה</span></td></tr>
+    <tr><td>DB אנליטי/וקטורי</td><td>Postgres + pgvector</td><td><span class="tag t-wip">● הצעה</span></td></tr>
+    <tr><td>סריקה</td><td>Playwright</td><td><span class="tag t-wip">● הצעה</span></td></tr>
+    <tr><td>דשבורד Web</td><td>עוד לא נבחר. מוקאפ ב-Google Stitch</td><td><span class="tag t-open">? פתוח</span></td></tr>
+    <tr><td>אירוח</td><td>עוד לא נבחר (GCP מתאים בגלל Firebase)</td><td><span class="tag t-open">? פתוח</span></td></tr>
+  </table>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 10. TELEPHONY & LLM ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">07</div><div class="grow"><h1>טלפוניה, קול ומודלי שפה</h1><div class="sub">מספר וירטואלי, Voice AI, תמלול ושילוב ספקי LLM</div></div></div>
+
+  <h2>שיחה נכנסת: הקלטה ותמלול <span class="tag t-ok">✓ מספר וירטואלי לכל מתווך</span></h2>
+  <svg viewBox="0 0 700 90" style="width:100%;height:30mm" font-family="Heebo" font-size="12" font-weight="700">
+    <defs><marker id="a2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#94a3b8"/></marker></defs>
+    <g stroke="#94a3b8" stroke-width="1.8" marker-end="url(#a2)"><line x1="600" y1="45" x2="560" y2="45"/><line x1="470" y1="45" x2="430" y2="45"/><line x1="340" y1="45" x2="300" y2="45"/><line x1="210" y1="45" x2="170" y2="45"/></g>
+    <g text-anchor="middle" fill="#fff">
+      <rect x="600" y="20" width="95" height="50" rx="10" fill="#64748b"/><text x="647" y="50">📞 קונה</text>
+      <rect x="470" y="20" width="90" height="50" rx="10" fill="#0e7490"/><text x="515" y="42">מספר</text><text x="515" y="58">וירטואלי</text>
+      <rect x="340" y="20" width="90" height="50" rx="10" fill="#475569"/><text x="385" y="42">👤 נייד</text><text x="385" y="58">המתווך</text>
+      <rect x="210" y="20" width="90" height="50" rx="10" fill="#7c3aed"/><text x="255" y="42">הקלטה</text><text x="255" y="58">+ תמלול</text>
+      <rect x="20" y="20" width="150" height="50" rx="10" fill="#4f46e5"/><text x="95" y="42">Call Intelligence</text><text x="95" y="58">← CRM</text>
+    </g>
+  </svg>
+  <p class="small">מרכזיית ענן עם מספרים ישראליים (Twilio, Voicenter או דומה) מעבירה את השיחה לנייד ומקליטה אותה בענן. הפתרון עובד גם באייפון, שבו אפליקציה לא יכולה להקליט שיחות רגילות. בסוף השיחה webhook שולח את ההקלטה לתמלול.</p>
+
+  <h2>שיחה יוצאת: Voice AI <span class="tag t-ok">✓ כבר ב-MVP</span></h2>
+  <div class="grid2">
+    <div class="card soft small">
+      <b>זרימה:</b> המוכר אישר בוואטסאפ ← הסוכן הקולי מתקשר מאותה מרכזייה ← שיחה בעברית בשם המשרד ← <b>function-calling</b> לבדיקת זמינות ביומן ← קביעת פגישה ← סיכום ותמליל לתיק המוכר.
+    </div>
+    <div class="card soft small">
+      <b>ספקים לבדיקה:</b> Vapi, Retell, ElevenLabs Conversational.<br>
+      <b>חובה:</b> גילוי נאות שמדובר ב-AI, הודעה על הקלטה, ואפשרות להעביר את השיחה לאדם.<br>
+      <span class="tag t-open">? פתוח</span> בחירת ספק אחרי פיילוט איכות עברית.
+    </div>
+  </div>
+
+  <h2>תמלול עברית <span class="tag t-open">? פתוח</span></h2>
+  <p class="small">מועמדים: Whisper, ivrit.ai, Google STT. נבחר אחרי בדיקה על הקלטות אמיתיות של שיחות נדל"ן, כולל רעשי רקע, סלנג ושמות רחובות.</p>
+
+  <h2>מודלי שפה: שילוב ספקים <span class="tag t-ok">✓ הוחלט</span></h2>
+  <table>
+    <tr><th>שכבה</th><th>מודל מוצע</th><th>שימושים</th><th>עלות</th></tr>
+    <tr><td><b>חשיבה ותזמור</b></td><td><code>claude-opus-5-5</code></td><td>סוכן-העל, תכנון, החלטות מורכבות</td><td>$$$</td></tr>
+    <tr><td><b>שיחה ותוכן</b></td><td><code>claude-sonnet-5-5</code></td><td>וואטסאפ מול מוכרים וקונים, קופי שיווקי, ניתוח תמלילים</td><td>$$</td></tr>
+    <tr><td><b>מהיר וזול</b></td><td><code>claude-haiku-5-5</code> / מודל זול אחר</td><td>סיווג תשובות, חילוץ שדות, דה-דופ, ניתוב</td><td>$</td></tr>
+    <tr><td><b>קול</b></td><td>לפי ספק ה-Voice AI</td><td>שיחות יוצאות</td><td>לפי דקה</td></tr>
+  </table>
+  <p class="small" style="margin-top:2mm">לכל סוכן מוגדר בקובץ config איזה מודל הוא מקבל, כך שאפשר להחליף ספק בלי לשנות קוד.</p>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 11. OFFICE TYPES ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">08</div><div class="grow"><h1>סוגי משרד ו-Multi-tenancy</h1><div class="sub">אותו מודל נתונים לכל סוגי המשרדים</div></div><span class="tag t-ok">✓ הוחלט</span></div>
+
+  <div class="grid2">
+    <div class="card" style="border-top:4px solid var(--d1)">
+      <h3>👤 סוליסט <code>solo</code></h3>
+      <svg viewBox="0 0 200 50" style="width:100%;height:16mm"><circle cx="100" cy="25" r="14" fill="#0891b2"/><text x="100" y="30" fill="#fff" text-anchor="middle" font-size="12">את/ה</text></svg>
+      <div class="small">אדם אחד שיש לו גישה לכל המודולים.</div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--d3)">
+      <h3>👥 שותפים זהים <code>partners_equal</code></h3>
+      <svg viewBox="0 0 200 50" style="width:100%;height:16mm"><circle cx="70" cy="25" r="14" fill="#0d9488"/><circle cx="100" cy="25" r="14" fill="#0d9488"/><circle cx="130" cy="25" r="14" fill="#0d9488"/><line x1="56" y1="44" x2="144" y2="44" stroke="#0d9488" stroke-width="2"/></svg>
+      <div class="small">שני שותפים או יותר. לכל שותף גישה לכל המידע, ברמת המשרד.</div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--d4)">
+      <h3>👥 שותפים לא זהים <code>partners_custom</code></h3>
+      <svg viewBox="0 0 200 50" style="width:100%;height:16mm"><circle cx="70" cy="25" r="16" fill="#d97706"/><circle cx="105" cy="25" r="12" fill="#f59e0b"/><circle cx="133" cy="25" r="9" fill="#fbbf24"/></svg>
+      <div class="small">לכל שותף <b>מטריצת הרשאות מותאמת לגמרי</b>. אחד רואה כספים והשני לא, אחד מנהל רק את השיווק, וכן הלאה.</div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--d0)">
+      <h3>🏢 משרד מנוהל <code>managed</code></h3>
+      <svg viewBox="0 0 200 50" style="width:100%;height:16mm"><circle cx="100" cy="12" r="10" fill="#6d28d9"/><g stroke="#a78bfa" stroke-width="1.5"><line x1="100" y1="22" x2="55" y2="38"/><line x1="100" y1="22" x2="85" y2="38"/><line x1="100" y1="22" x2="115" y2="38"/><line x1="100" y1="22" x2="145" y2="38"/></g><circle cx="55" cy="40" r="7" fill="#a78bfa"/><circle cx="85" cy="40" r="7" fill="#a78bfa"/><circle cx="115" cy="40" r="7" fill="#a78bfa"/><circle cx="145" cy="40" r="7" fill="#a78bfa"/></svg>
+      <div class="small">מנהל אחד או יותר עם מתווכים תחתם. <b>המנהל</b> רואה את ההכנסות והנכסים של כולם. <b>המתווך</b> מקבל את כל השירותים לעבודה השוטפת, אבל רואה רק את המידע שלו ואת מה ששותף איתו.</div>
+    </div>
+  </div>
+
+  <h2>מבנה נתונים מוצע ב-Firestore <span class="tag t-wip">● הצעה טכנית</span></h2>
+  <div class="grid2">
+    <div class="card soft" style="direction:ltr;text-align:left;font-family:Consolas,monospace;font-size:8pt;line-height:1.6;white-space:pre">offices/{officeId}
+  ├─ type: solo | partners_equal | partners_custom | managed
+  ├─ settings/          ← office name, tone, channels, areas
+  ├─ members/{uid}      ← role, status, permissions, settings
+  ├─ properties/        ← ownerUid, sharedWith[]
+  ├─ clients/
+  ├─ sellers_pipeline/
+  ├─ buyer_loops/
+  ├─ tasks/
+  ├─ calls/
+  ├─ deals/
+  ├─ share_requests/
+  └─ agent_runs/        ← audit of AI actions</div>
+    <div>
+      <div class="card" style="margin-bottom:3mm"><b>מעבר הדרגתי מ-nadlan-pro</b><div class="small">היום כל הנתונים נמצאים תחת <code>users/{uid}</code>. שכבת Repository ב-Python תתמוך בשני המבנים עד שהאפליקציה תעבור למבנה החדש.</div></div>
+      <div class="card" style="margin-bottom:3mm"><b>הגדרות לכל מתווך</b><div class="small"><code>members/{uid}/settings</code>: כללי זמינות ליומן, תוכנית Follow-up, מספר וירטואלי ותסריטי פנייה.</div></div>
+      <div class="card"><b>הגדרות לכל משרד</b><div class="small">שם, מיתוג, טון, אזורי פעילות, ערוצי פרסום פעילים ומפתחות API.</div></div>
+    </div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 12. PERMISSIONS ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">09</div><div class="grow"><h1>הרשאות ובעלות על מידע</h1><div class="sub">מטריצה של מודול מול היקף גישה, עם ברירות מחדל לפי תפקיד</div></div><span class="tag t-ok">✓ הוחלט</span></div>
+
+  <div class="chips" style="gap:2mm;margin-bottom:3mm">
+    <span class="sc s-none">none</span><span class="small">אין גישה</span>
+    <span class="sc s-own">own</span><span class="small">רק שלו</span>
+    <span class="sc s-shared">shared</span><span class="small">שלו + מה ששותף איתו</span>
+    <span class="sc s-office">office</span><span class="small">כל המשרד</span>
+  </div>
+  <table class="pm">
+    <tr><th>מודול</th><th>Owner / שותף זהה</th><th>מנהל</th><th>מתווך</th><th>שותף לא זהה (דוגמה)</th></tr>
+    <tr><td>נכסים <code>properties</code></td><td><span class="sc s-office">office</span></td><td><span class="sc s-office">office</span></td><td><span class="sc s-shared">shared</span></td><td><span class="sc s-office">office</span></td></tr>
+    <tr><td>לקוחות <code>clients</code></td><td><span class="sc s-office">office</span></td><td><span class="sc s-office">office</span></td><td><span class="sc s-shared">shared</span></td><td><span class="sc s-own">own</span></td></tr>
+    <tr><td>צנרת מוכרים</td><td><span class="sc s-office">office</span></td><td><span class="sc s-office">office</span></td><td><span class="sc s-own">own</span></td><td><span class="sc s-own">own</span></td></tr>
+    <tr><td>יומן ומשימות</td><td><span class="sc s-office">office</span></td><td><span class="sc s-office">office</span></td><td><span class="sc s-own">own</span></td><td><span class="sc s-own">own</span></td></tr>
+    <tr><td>שיחות והקלטות</td><td><span class="sc s-office">office</span></td><td><span class="sc s-office">office</span></td><td><span class="sc s-own">own</span></td><td><span class="sc s-none">none</span></td></tr>
+    <tr><td>עסקאות והכנסות</td><td><span class="sc s-office">office</span></td><td><span class="sc s-office">office</span></td><td><span class="sc s-own">own</span></td><td><span class="sc s-none">none</span></td></tr>
+    <tr><td>שיווק</td><td><span class="sc s-office">office</span></td><td><span class="sc s-office">office</span></td><td><span class="sc s-own">own</span></td><td><span class="sc s-office">office</span></td></tr>
+    <tr><td>סוכני AI (הפעלה)</td><td><span class="sc s-office">office</span></td><td><span class="sc s-office">office</span></td><td><span class="sc s-own">own</span></td><td><span class="sc s-own">own</span></td></tr>
+    <tr><td>התאמות בין מתווכים</td><td><span class="sc s-office">office</span></td><td><span class="sc s-office">office</span></td><td><span class="sc s-none">none</span></td><td><span class="sc s-none">none</span></td></tr>
+    <tr><td>חברי צוות והגדרות</td><td><span class="sc s-office">office</span></td><td><span class="sc s-office">office</span></td><td><span class="sc s-none">none</span></td><td><span class="sc s-none">none</span></td></tr>
+  </table>
+
+  <div class="grid2" style="margin-top:4mm">
+    <div class="card" style="border-top:4px solid var(--d2)">
+      <h3>🤖 סוכני AI והרשאות</h3>
+      <ul class="small">
+        <li>כל הפעלה של סוכן מתבצעת <b>בשם actor</b>, כלומר המתווך שהפעיל או אישר אותה.</li>
+        <li>כל מה שהסוכן מייצר, כמו מוכר שגויס, ליד או פגישה, <b>שייך למתווך שהפעיל אותו</b>.</li>
+        <li>לסוכן LLM <b>אין גישה ישירה ל-DB</b>. כל פעולה שלו מסוננת לפי ההרשאות של ה-actor, כך שהוא לא יכול לחשוף מידע של מתווך אחר.</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:4px solid var(--d7)">
+      <h3>🔗 שיתוף והתאמות בין מתווכים</h3>
+      <ul class="small">
+        <li>מתווכים לא רואים מידע אחד של השני בלי <b>אישור הבעלים או המנהל</b>. הבקשה עוברת דרך <code>share_requests</code>.</li>
+        <li>התאמה בין קונה של א' לנכס של ב': במשרד מנוהל <b>רק המנהל רואה אותה</b> ומחליט אם לחבר בין המתווכים.</li>
+        <li>אצל שותפים זהים כולם רואים את ההתאמה. אצל שותפים לא זהים, רק מי שקיבל הרשאה לכך.</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:4px solid var(--d4)">
+      <h3>🚪 מתווך עוזב</h3>
+      <ul class="small">
+        <li>הגישה שלו נחסמת מיד.</li>
+        <li><b>ברירת מחדל:</b> כל הנתונים שלו נשארים במשרד, והמנהל מעביר אותם למתווך אחר.</li>
+        <li>המשרד יכול <b>לאשר ייצוא</b> של הנתונים למתווך, וגם הייצוא נרשם ב-audit.</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:4px solid var(--d8)">
+      <h3>🛡 אכיפה בשתי שכבות</h3>
+      <ul class="small">
+        <li>קובץ <code>policy.yaml</code> אחד הוא מקור האמת להרשאות.</li>
+        <li>Firestore Security Rules מגנות על האפליקציה.</li>
+        <li>מודול <code>authz</code> ב-Python מגן על ה-Backend ועל הסוכנים.</li>
+        <li>טסטים לכל צירוף של סוג משרד, תפקיד ומודול.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= COLLAB NETWORK A ======================= -->
+<section class="page">
+  <div class="ph"><div class="num" style="background:var(--d9)">10</div><div class="grow"><h1>רשת שיתופי פעולה</h1><div class="sub">מחלקה 9: נכסים נכנסים מקבוצות וואטסאפ, ונכסים שלנו יוצאים לרשת ולקבוצות</div></div><span class="tag t-ok">✓ הוחלט</span></div>
+
+  <div class="callout" style="border-inline-start-color:var(--d9);background:linear-gradient(90deg,#fdf4ff,#f5f3ff)">
+    מתווכים משתפים נכסים לשיתוף פעולה בקבוצות וואטסאפ. METATRON <b>קולט</b> את הנכסים האלה ומחפש להם קונים, ו<b>מפיץ</b> את הנכסים שלנו בשני מסלולים: לכל משרדי METATRON, ולקבוצות הוואטסאפ, כדי להגיע גם למתווכים שלא משתמשים במערכת.
+  </div>
+
+  <svg viewBox="0 0 700 250" style="width:100%;height:74mm;margin-top:3mm" font-family="Heebo" font-size="12">
+    <defs><marker id="a3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#94a3b8"/></marker></defs>
+    <rect x="470" y="10" width="225" height="230" rx="14" fill="#f0fdf4" stroke="#bbf7d0"/>
+    <text x="582" y="32" text-anchor="middle" font-weight="800" fill="#15803d" font-size="13">קבוצות וואטסאפ של מתווכים</text>
+    <g fill="#fff" stroke="#86efac"><rect x="490" y="48" width="185" height="34" rx="8"/><rect x="490" y="92" width="185" height="34" rx="8"/><rect x="490" y="136" width="185" height="34" rx="8"/></g>
+    <g text-anchor="middle" fill="#166534" font-weight="700"><text x="582" y="70">💬 "מתווכי רמת גן"</text><text x="582" y="114">💬 "שת"פ גבעתיים"</text><text x="582" y="158">💬 "נדל"ן מרכז — שיתופים"</text></g>
+    <text x="582" y="196" text-anchor="middle" fill="#64748b" font-size="10">רק קבוצות שהמתווך בחר מראש</text>
+    <text x="582" y="212" text-anchor="middle" fill="#64748b" font-size="10">כולל מתווכים שלא משתמשים ב-METATRON</text>
+
+    <rect x="235" y="10" width="220" height="230" rx="14" fill="#fdf4ff" stroke="#f0abfc"/>
+    <text x="345" y="32" text-anchor="middle" font-weight="800" fill="#a21caf" font-size="13">METATRON · מחלקה 9</text>
+    <g text-anchor="middle" font-weight="700" fill="#fff">
+      <rect x="255" y="48" width="180" height="40" rx="9" fill="#a21caf"/><text x="345" y="66">Collab Ingestion</text><text x="345" y="81" font-size="9.5" font-weight="400">סיווג · חילוץ · דה-דופ</text>
+      <rect x="255" y="100" width="180" height="34" rx="9" fill="#16a34a"/><text x="345" y="122">Matching ← קונים</text>
+      <rect x="255" y="146" width="180" height="40" rx="9" fill="#7e22ce"/><text x="345" y="164">Collab Publisher</text><text x="345" y="179" font-size="9.5" font-weight="400">אוטו יומי · המלצות לידני</text>
+      <rect x="255" y="198" width="180" height="32" rx="9" fill="#475569"/><text x="345" y="219">🏠 נכס שלנו "פתוח לשת"פ"</text>
+    </g>
+
+    <rect x="5" y="10" width="215" height="230" rx="14" fill="#eff6ff" stroke="#bfdbfe"/>
+    <text x="112" y="32" text-anchor="middle" font-weight="800" fill="#1d4ed8" font-size="13">רשת METATRON</text>
+    <g fill="#fff" stroke="#93c5fd"><rect x="22" y="48" width="180" height="30" rx="8"/><rect x="22" y="86" width="180" height="30" rx="8"/><rect x="22" y="124" width="180" height="30" rx="8"/></g>
+    <g text-anchor="middle" fill="#1e40af" font-weight="700"><text x="112" y="68">🏢 משרד א'</text><text x="112" y="106">🏢 משרד ב'</text><text x="112" y="144">🏢 משרד ג' …</text></g>
+    <text x="112" y="180" text-anchor="middle" fill="#334155" font-size="10.5" font-weight="700">רואים: פרטי הנכס + המתווך המטפל</text>
+    <text x="112" y="198" text-anchor="middle" fill="#dc2626" font-size="10.5" font-weight="700">לא רואים: פרטי המוכר</text>
+
+    <g stroke="#94a3b8" stroke-width="1.8" fill="none" marker-end="url(#a3)">
+      <path d="M488,68 L438,68"/>
+      <path d="M345,88 L345,98"/>
+      <path d="M345,198 L345,188"/>
+      <path d="M435,166 L488,152"/>
+      <path d="M255,166 L204,100"/>
+    </g>
+    <g font-size="9.5" fill="#64748b" text-anchor="middle"><text x="463" y="60">שאיבה</text><text x="463" y="176">פרסום</text><text x="228" y="150">הטלה</text></g>
+  </svg>
+
+  <div class="grid2" style="margin-top:3mm">
+    <div class="card" style="border-top:4px solid #15803d">
+      <h3>⬅ נכנס: שאיבה מקבוצות</h3>
+      <ul class="small">
+        <li>הסוכן עובר רק על <b>הקבוצות שהמתווך הגדיר מראש</b>.</li>
+        <li>הוא מזהה הודעה שהיא מודעת נכס, מחלץ את פרטי הנכס ואת פרטי המתווך שפרסם, ומסיר כפילויות כשאותו נכס פורסם על ידי כמה מתווכים.</li>
+        <li>הנכס נשמר כ<b>"נכס שת"פ חיצוני"</b> במאגר של <b>המשרד ששאב אותו בלבד</b>.</li>
+        <li>הסוכן מחפש לנכס <b>התאמות</b> מול הקונים, וכשיש התאמה הוא מנסח פנייה למתווך המפרסם כדי לתאם סיור.</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:4px solid var(--d9)">
+      <h3>➡ יוצא: נכס שלנו נפתח לשת"פ</h3>
+      <ul class="small">
+        <li><b>רשת METATRON:</b> הנכס נכנס אוטומטית למאגר של <b>כל המשרדים</b> כ"פתוח לשת"פ", עם פרטי המתווך המטפל ובלי פרטי המוכר.</li>
+        <li><b>קבוצות וואטסאפ:</b> לכל נכס המתווך בוחר בין <b>אוטומטי</b> (פעם ביום, או לפי ההגדרה שלו) ל<b>ידני</b>.</li>
+        <li>לנכסים הידניים המערכת <b>ממליצה כל כמה ימים</b> לפרסם אותם. אפשר להעביר נכס בין שני המצבים בכל רגע.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>מה רואים ברשת ומה מוסתר</h2>
+  <table>
+    <tr><th style="width:50%">✅ גלוי לכל משרדי METATRON</th><th>🔒 מוסתר (נשאר רק במשרד המטפל)</th></tr>
+    <tr><td>סוג, עיר, שכונה, רחוב <span class="tag t-open">? מספר בית</span>, חדרים, שטח, קומה, מחיר, מאפיינים, תמונות וסרטון</td><td>שם המוכר, הטלפון שלו וכל פרטי הקשר</td></tr>
+    <tr><td><b>המתווך המטפל:</b> שם, טלפון, משרד, מספר רישיון</td><td>הערות פנימיות, גמישות במחיר, מסמכים, הסכם הבלעדיות</td></tr>
+    <tr><td>תנאי שת"פ (חלוקת עמלה), סטטוס, תאריך עדכון</td><td>היסטוריית שיחות, תמלילים והתכתבויות עם המוכר</td></tr>
+  </table>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= COLLAB NETWORK B ======================= -->
+<section class="page">
+  <div class="ph"><div class="num" style="background:var(--d9)">10</div><div class="grow"><h1>רשת שיתופי פעולה: תכנון טכני</h1><div class="sub">חיבור לוואטסאפ, רכיבים, מודל נתונים וכללי פרסום</div></div><span class="tag t-wip">● הצעה טכנית</span></div>
+
+  <h2>חיבור לקבוצות: כל מתווך בוחר <span class="tag t-ok">✓ הוחלט</span></h2>
+  <p class="small">ה-API הרשמי של וואטסאפ (Cloud API) <b>לא מאפשר לקרוא הודעות מקבוצות קיימות של אנשים פרטיים ולא לפרסם בהן</b>. לכן יש שלוש דרכי חיבור, וכל מתווך בוחר את המתאימה לו:</p>
+  <div class="grid3">
+    <div class="mode" style="border-top:4px solid var(--d9)"><div class="ic">🔗</div><b>מכשיר מקושר</b> <span class="tag t-wip">ברירת מחדל</span>
+      <div class="small">המתווך סורק QR פעם אחת, וה-WA Gateway מתחבר כמו WhatsApp Web.<br>✓ אוטומטי לגמרי, <b>קריאה ופרסום</b>, כל טלפון<br>✗ לא רשמי, <b>סיכון לחסימת המספר</b>, ולכן המתווך מקבל אזהרה ומאשר</div></div>
+    <div class="mode" style="border-top:4px solid var(--d7)"><div class="ic">🔔</div><b>האזנה להתראות</b>
+      <div class="small">מודול באפליקציית nadlan-pro קורא את התראות הוואטסאפ של הקבוצות שנבחרו.<br>✓ בלי סיכון חסימה<br>✗ <b>אנדרואיד בלבד</b>, טקסט חלקי ובלי חלק מהתמונות. <b>קריאה בלבד</b></div></div>
+    <div class="mode" style="border-top:4px solid var(--d2)"><div class="ic">↪</div><b>העברה לבוט</b>
+      <div class="small">המתווך מעביר מודעה מעניינת למספר הבוט של METATRON.<br>✓ רשמי (Cloud API), <b>עובד גם באייפון</b><br>✗ ידני, ומתאים כגיבוי</div></div>
+  </div>
+  <p class="small" style="margin-top:2mm"><b>פרסום בלי מכשיר מקושר:</b> המערכת מכינה את ההודעה עם התמונות, והמתווך שולח אותה בלחיצה אחת דרך תפריט השיתוף של הטלפון.</p>
+
+  <h2>רכיבים</h2>
+  <table>
+    <tr><th style="width:24%">רכיב</th><th>מה הוא עושה</th></tr>
+    <tr><td><b>WA Gateway</b></td><td>שירות נפרד (Node + Baileys, כמו fb-poster שגם הוא ב-Node). מחזיק session מוצפן לכל מתווך מחובר, מסנן רק את הקבוצות שנבחרו, מפיק <code>wa.group_message</code> ומבצע <code>wa.group_post</code>. מנטר ניתוקים.</td></tr>
+    <tr><td><b>Notification Listener</b></td><td>מודול native לאנדרואיד ב-nadlan-pro, באותו דפוס של <code>plugins/call-log.js</code>, ששולח ל-<code>POST /ingest/wa-notification</code></td></tr>
+    <tr><td><b>Collab Ingestion</b> (Crew)</td><td>מסווג הודעה (מודעת נכס? מכירה או שכירות?), מחלץ שדות ופרטי מתווך (Haiku/Sonnet) ומסיר כפילויות (כתובת, חדרים ומחיר + embeddings). אחר כך שומר ומעביר ל-Matching.</td></tr>
+    <tr><td><b>Network Projection</b></td><td>כשנכס נפתח לשת"פ, יוצר רשומה ברשת <b>בלי שדות המוכר</b>. כשהשת"פ נסגר או שהנכס נמכר, מסיר אותה.</td></tr>
+    <tr><td><b>Collab Publisher</b> (Crew)</td><td>מתזמן יומי לנכסים האוטומטיים, ממליץ כל N ימים על הנכסים הידניים, ומנסח הודעה עם קישור לדף שיתוף (<code>/share</code> הקיים, בלי פרטי המוכר).</td></tr>
+    <tr><td><b>Matching</b> (מורחב)</td><td>מחפש בשלושה מאגרים: הנכסים של המשרד, נכסי שת"פ חיצוניים של המשרד, ורשת METATRON.</td></tr>
+  </table>
+
+  <div class="grid2" style="margin-top:3mm">
+    <div>
+      <h3>מודל נתונים</h3>
+      <div class="card soft" style="direction:ltr;text-align:left;font-family:Consolas,monospace;font-size:7.4pt;line-height:1.5;white-space:pre">network/collab_listings/{id}   ← global, backend-only
+  public property fields, photos
+  handling_agent {name, phone, office, license}
+  terms, status, sourceOfficeId, sourcePropertyId
+
+offices/{id}/properties/{pid}.collab
+  open, network, groups_mode: auto|manual
+  group_ids[], schedule, last_posted_at
+  last_recommended_at, terms
+
+external collab property (from WA group):
+  source: wa_group, source_group, raw_message
+  external_broker {name, phone, office}
+
+members/{uid}/wa_link
+  mode: linked_device|notifications|forward
+  read_groups[], publish_groups[], status</div>
+    </div>
+    <div>
+      <h3>כללי פרסום בקבוצות</h3>
+      <ul class="small">
+        <li>מקסימום X פרסומים לקבוצה ביום, עם פיזור זמנים אקראי (jitter)</li>
+        <li>אותו נכס לא מתפרסם שוב באותה קבוצה לפני N ימים</li>
+        <li>שעות פרסום לפי ההגדרה של המתווך</li>
+        <li>עצירה אוטומטית כשהנכס נמכר או כשהשת"פ נסגר</li>
+      </ul>
+      <h3>בונים על הקיים</h3>
+      <div class="small">ב-nadlan-pro כבר יש <code>is_shared</code>, <code>collab_id</code>, <code>sharing_agent_*</code>, את ה-endpoint <code>/collab</code>, את ה-KV <code>collab:properties</code> ואת המסך <code>property/collab-view</code>. מהם עוברים למאגר הרשת.</div>
+      <h3>שאלות פתוחות לפרק <span class="tag t-open">?</span></h3>
+      <div class="small">ראו את קבוצת "רשת שיתופי פעולה" בעמוד 28.</div>
+    </div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 13. EXISTING VS NEW ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">11</div><div class="grow"><h1>מה קיים ומה חדש</h1><div class="sub">בונים על מה שכבר עובד ולא מתחילים מאפס</div></div></div>
+  <table>
+    <tr><th style="width:24%">רכיב</th><th style="width:38%">קיים היום</th><th>מה עושים ב-METATRON</th></tr>
+    <tr><td><b>nadlan-pro</b> (CRM)</td><td>Expo SDK 54, Firebase Auth + Firestore, מסכי נכסים, לקוחות, משימות וקהילה</td><td>זו אפליקציית המתווך. ממשיכים לעבוד איתה, מוסיפים מסכים (דיווח תוצאה, אישור קמפיין, הגדרות סוכנים) ומעבירים בהדרגה למבנה <code>offices/</code></td></tr>
+    <tr><td>מודל נכס</td><td><code>users/{uid}/properties</code> עם שדות עשירים: ממ"ד, חניה, התחדשות עירונית, מיקום ועוד</td><td>שומרים על השדות ומוסיפים <code>officeId</code>, <code>ownerUid</code>, <code>sharedWith[]</code></td></tr>
+    <tr><td>מודל לקוח</td><td><code>clients</code>: קונה או שוכר, העדפות חיפוש, <code>inquiries[]</code></td><td>בסיס לפרופיל הקונה ש-Call Intelligence ממלא, ובסיס ללופ הקונה</td></tr>
+    <tr><td>משימות ויומן</td><td><code>tasks</code>: פגישה, משימה, תזכורת, שיחה. סנכרון ליומן Google עוד לא מומש</td><td>סוכן ה-Scheduling כותב לכאן, ומוסיפים סנכרון ל-Google Calendar</td></tr>
+    <tr><td>התאמות</td><td><code>src/utils/matching.ts</code></td><td>מעבירים ל-Python כבסיס ל-Matching, ומוסיפים pgvector ומאגר שוק</td></tr>
+    <tr><td>סוכן וואטסאפ</td><td>Cloudflare Worker (<code>wa.js</code>): Meta Cloud API, סיווג ב-Claude Haiku, outreach לקונים</td><td><span class="tag t-open">? פתוח</span> להשאיר ב-Worker או להעביר ל-Backend בפייתון</td></tr>
+    <tr><td>שיחות</td><td>פלאגינים לאנדרואיד: call-log ומודל שמופיע בשיחה נכנסת (בלי הקלטה)</td><td>ההקלטה עוברת למספר הווירטואלי, והמודל הקיים יכול להציג את הפרופיל של מי שמתקשר</td></tr>
+    <tr><td>SMS / OTP</td><td>InforU (SMS המוני + opt-out), Twilio OTP</td><td>ממשיכים להשתמש. רשימת ה-opt-out הופכת לגלובלית</td></tr>
+    <tr><td>דפי שיתוף נכס</td><td>Worker: <code>/share</code>, תמונות ווידאו ב-KV</td><td>ממשיכים להשתמש בהם כנחיתה מפרסום ומוואטסאפ</td></tr>
+    <tr><td>שיתופי פעולה</td><td><code>is_shared</code>, <code>collab_id</code>, <code>sharing_agent_*</code>, ה-endpoint <code>/collab</code>, ה-KV <code>collab:properties</code> והמסך <code>collab-view</code></td><td>הבסיס לרשת שיתופי הפעולה (פרק 10): עוברים למאגר <code>network/collab_listings</code></td></tr>
+    <tr><td><b>fb-poster</b></td><td>Express + Puppeteer + SQLite: קמפיינים ותזמון לקבוצות פייסבוק</td><td>הופך ל-adapter של ערוץ "קבוצות פייסבוק" במחלקת השיווק</td></tr>
+  </table>
+
+  <div class="card" style="margin-top:5mm;border:2px solid #fecaca;background:#fef2f2">
+    <b>⚠ ממצא אבטחה לתיקון</b>
+    <div class="small">ב-<code>nadlan-pro/app/property/from-text.tsx</code> מפתח ה-Anthropic נשלח מתוך האפליקציה (<code>EXPO_PUBLIC_ANTHROPIC_KEY</code>), ולכן כל מי שמוריד את האפליקציה יכול לחלץ אותו. צריך להעביר את הקריאה לשרת ולהחליף את המפתח.</div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 14. DECISIONS ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">12</div><div class="grow"><h1>יומן החלטות</h1><div class="sub">כל ההחלטות מתאריך 18.10.2026</div></div></div>
+  <table>
+    <tr><th style="width:5%">#</th><th style="width:40%">החלטה</th><th>הקשר / נימוק</th><th style="width:13%">סטטוס</th></tr>
+    <tr><td>1</td><td>מסגרת הסוכנים: <b>CrewAI</b></td><td>מחלקות כ-Crews, וסוכן-העל כ-Flow</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>2</td><td>Backend ב-<b>Python</b></td><td>זה רוב הסטאק של הצוות</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>3</td><td>מתממשקים ל-<b>nadlan-pro</b> הקיים, והוא הופך לחלק מ-METATRON</td><td>ה-CRM כבר קיים ועובד על Firebase</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>4</td><td>מוצר <b>SaaS multi-tenant</b> למשרדים רבים</td><td>תשובה לשאלת המודל העסקי</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>5</td><td>4 סוגי משרד ומטריצת הרשאות מותאמת</td><td>סוליסט, שותפים זהים, שותפים לא זהים, משרד מנוהל</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>6</td><td>ליד או מוכר שהסוכן מייצר <b>שייך למתווך שהפעיל אותו</b></td><td>בעלות ברורה, ולכן גם הרשאות ברורות</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>7</td><td>התאמה בין מתווכים במשרד מנוהל: <b>רק המנהל רואה</b></td><td>שומר על הפרטיות בין המתווכים</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>8</td><td>מתווך עוזב: הנתונים <b>נשארים במשרד</b>, וייצוא אפשרי באישור</td><td>ברירת מחדל שמגינה על המשרד</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>9</td><td>מקורות למוכרים: מודעות פרטיות, רשימות, הפניות, מאגרים חיצוניים</td><td>כל המקורות</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>10</td><td>הוורקפלו <b>מתחיל בפנייה קרה של AI</b> למוכרים</td><td>תיקון לסיכום הראשון: הגיוס האנושי בא אחרי</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>11</td><td><b>אישור אנושי</b> לפני כל קמפיין יוצא</td><td>שליטה, ותאימות לחוק</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>12</td><td>וואטסאפ קודם, ואחרי הסכמה <b>שיחת Voice AI כבר ב-MVP</b></td><td>עודכן מ"קול בהמשך"</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>13</td><td><b>סוכן תיאום</b> נפרד, שעובד לפי כללי הזמינות של המתווך</td><td>שירות משותף לגיוס ולסיורים</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>14</td><td>מחלקת <b>Follow-up</b> למוכרים שלא גויסו, או סגירת חיזורים</td><td>תוכנית שהמתווך מגדיר</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+  </table>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+<section class="page">
+  <div class="ph"><div class="num">12</div><div class="grow"><h1>יומן החלטות (המשך)</h1><div class="sub">החלטות 15–29</div></div></div>
+  <table>
+    <tr><th style="width:5%">#</th><th style="width:40%">החלטה</th><th>הקשר / נימוק</th><th style="width:13%">סטטוס</th></tr>
+    <tr><td>15</td><td>שיחות נכנסות: <b>המתווך עונה</b>, השיחה מוקלטת ומתומללת ומוזנת ל-CRM</td><td>—</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>16</td><td><b>מספר וירטואלי</b> לכל מתווך, להקלטה</td><td>עובד גם באייפון</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>17</td><td>לופ הקונה נמשך עד <b>opt-out של הקונה או עצירה של המתווך</b></td><td>—</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>18</td><td>משא ומתן: <b>המתווך מוביל, ה-AI מסייע</b></td><td>—</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>19</td><td><b>שילוב ספקי LLM</b> לפי סוג המשימה</td><td>איזון בין איכות לעלות</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>20</td><td>התיעוד ב-<b>Obsidian Vault בתוך תיקיית הפרויקט</b></td><td>מסונכרן עם GitHub</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>21</td><td>מוקאפ סופי של הדשבורד ב-<b>Google Stitch</b> בשלב מתקדם</td><td>המוקאפים כאן נועדו רק להמחשה</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>22</td><td>Firestore כמקור האמת. Redis Streams ו-Postgres כרכיבי עזר</td><td>הצעה ארכיטקטונית</td><td><span class="tag t-wip">הצעה</span></td></tr>
+    <tr><td>23</td><td>עדיין אין תכנות: קודם סוקרים את המסמך הזה</td><td>בקשה מפורשת</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td colspan="4" style="background:#fdf4ff;color:var(--d9);font-weight:800">סבב 2: רשת שיתופי פעולה</td></tr>
+    <tr><td>24</td><td>מחלקה 9: <b>רשת שיתופי פעולה</b> (Collab Ingestion + Collab Publisher)</td><td>נכסי שת"פ נכנסים ויוצאים</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>25</td><td>שאיבת נכסים מ<b>קבוצות וואטסאפ שהמתווך בחר מראש</b>, וחיפוש התאמות עבורם</td><td>—</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>26</td><td>נכס שנפתח לשת"פ נכנס ל<b>רשת METATRON לכל המשרדים</b>, עם פרטי המתווך המטפל ו<b>בלי פרטי המוכר</b></td><td>כדי שיוכלו לתאם סיור מול המתווך</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>27</td><td>פרסום בקבוצות: לכל נכס <b>אוטומטי</b> (פעם ביום או לפי הגדרה) או <b>ידני</b>. לנכסים הידניים יש <b>המלצה כל כמה ימים</b></td><td>המתווך מסמן ויכול להחליף</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>28</td><td>חיבור לוואטסאפ: <b>כל מתווך בוחר</b> בין מכשיר מקושר, האזנה להתראות והעברה לבוט</td><td>ה-Cloud API לא תומך בקבוצות</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+    <tr><td>29</td><td>נכס שנשאב מקבוצה <b>נשאר רק במשרד ששאב אותו</b></td><td>לא מפיצים נכס של מתווך אחר בלי רשותו</td><td><span class="tag t-ok">הוחלט</span></td></tr>
+  </table>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 15. MOCKUP 1: OVERVIEW ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">13</div><div class="grow"><h1>מוקאפ 1: מבט סוכן-העל</h1><div class="sub">מצב המשרד בזמן אמת: מחלקות, משפכים והתראות</div></div><span class="tag t-idea">✦ להמחשה</span></div>
+  <div class="mocknote">⚠ מוקאפ לא מחייב, כל הנתונים פיקטיביים. העיצוב הסופי ייעשה ב-Google Stitch.</div>
+  <div class="app">
+    <div class="side">
+      <div class="logo">METATRON</div>
+      <div class="it on"><span class="dot" style="background:#f5b301"></span>מבט על</div>
+      <div class="it"><span class="dot" style="background:var(--d1)"></span>איתור מוכרים</div>
+      <div class="it"><span class="dot" style="background:var(--d2)"></span>פנייה קרה</div>
+      <div class="it"><span class="dot" style="background:var(--d3)"></span>יומן ותיאום</div>
+      <div class="it"><span class="dot" style="background:var(--d4)"></span>Follow-up</div>
+      <div class="it"><span class="dot" style="background:var(--d5)"></span>שיווק</div>
+      <div class="it"><span class="dot" style="background:var(--d6)"></span>שיחות</div>
+      <div class="it"><span class="dot" style="background:var(--d7)"></span>קונים והתאמות</div>
+      <div class="it"><span class="dot" style="background:var(--d8)"></span>עסקאות</div>
+      <div style="height:6mm"></div>
+      <div class="it"><span class="dot" style="background:#94a3b8"></span>צוות והרשאות</div>
+      <div class="it"><span class="dot" style="background:#94a3b8"></span>הגדרות</div>
+    </div>
+    <div class="main">
+      <div class="topbar"><div class="t">בוקר טוב, משרד "נדל"ן המרכז" ☀</div><span class="pill">היום · 18.10</span><span class="pill">כל המתווכים ▾</span></div>
+      <div class="kpis">
+        <div class="kpi" style="border-top-color:var(--d1)"><div class="v">47</div><div class="l">מוכרים חדשים היום</div><div class="d">▲ 12%</div></div>
+        <div class="kpi" style="border-top-color:var(--d3)"><div class="v">12</div><div class="l">פגישות גיוס השבוע</div><div class="d">▲ 3</div></div>
+        <div class="kpi" style="border-top-color:var(--d5)"><div class="v">38</div><div class="l">נכסים בשיווק</div><div class="d">▲ 5</div></div>
+        <div class="kpi" style="border-top-color:var(--d7)"><div class="v">126</div><div class="l">קונים בלופ</div><div class="d">▲ 9</div></div>
+        <div class="kpi" style="border-top-color:var(--d3)"><div class="v">21</div><div class="l">סיורים השבוע</div><div class="d">▲ 4</div></div>
+        <div class="kpi" style="border-top-color:var(--d8)"><div class="v">4</div><div class="l">עסקאות במו"מ</div><div class="d">₪ 168K עמלה צפויה</div></div>
+      </div>
+      <div class="w"><div class="wt">🧠 מצב המחלקות</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.8mm">
+          <div class="kc" style="border-color:var(--d1)"><b>איתור · פעיל</b>סריקה אחרונה 08:40 · 312 מודעות · 47 חדשים</div>
+          <div class="kc" style="border-color:var(--d2)"><b>פנייה קרה · פעיל</b>2 קמפיינים · 64 הודעות · 9 הסכימו לשיחה</div>
+          <div class="kc" style="border-color:var(--d3)"><b>תיאום · פעיל</b>5 פגישות נקבעו היום · 1 ממתינה</div>
+          <div class="kc" style="border-color:var(--d4)"><b>Follow-up · פעיל</b>23 מוכרים בתוכנית · 6 הודעות היום</div>
+          <div class="kc" style="border-color:var(--d5)"><b>שיווק · ⚠ אזהרה</b>יד2: שגיאת פרסום ב-2 נכסים</div>
+          <div class="kc" style="border-color:var(--d6)"><b>שיחות · פעיל</b>18 שיחות תומללו · 11 פרופילים חדשים</div>
+          <div class="kc" style="border-color:var(--d7)"><b>התאמות · פעיל</b>84 התאמות נשלחו · 7 ביקשו סיור</div>
+          <div class="kc" style="border-color:var(--d8)"><b>עסקאות · פעיל</b>2 הצעות חדשות · 1 ממתינה למתווך</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2.5mm">
+        <div class="w"><div class="wt">📉 משפך מוכרים (30 יום)</div>
+          <div class="hbar" style="background:var(--d1);width:100%">אותרו · 1,240</div>
+          <div class="hbar" style="background:var(--d2);width:78%">נשלח וואטסאפ · 960</div>
+          <div class="hbar" style="background:var(--d2);width:40%;opacity:.85">הסכימו לשיחה · 210</div>
+          <div class="hbar" style="background:var(--d3);width:22%">פגישה · 58</div>
+          <div class="hbar" style="background:var(--d7);width:14%">גויסו · 23</div>
+        </div>
+        <div class="w"><div class="wt">📈 משפך קונים (30 יום)</div>
+          <div class="hbar" style="background:var(--d6);width:100%">שיחות נכנסות · 412</div>
+          <div class="hbar" style="background:var(--d6);width:74%;opacity:.85">פרופיל נבנה · 305</div>
+          <div class="hbar" style="background:var(--d7);width:48%">קיבלו התאמות · 198</div>
+          <div class="hbar" style="background:var(--d3);width:25%">סיור · 96</div>
+          <div class="hbar" style="background:var(--d8);width:7%">הצעה · 11</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2.5mm;flex:1">
+        <div class="w"><div class="wt">🚨 התראות SLA</div>
+          <div class="mini" style="display:flex;flex-direction:column;gap:1.4mm">
+            <div>🔴 <b>מתווך: יוסי</b>: לא דיווח תוצאה על פגישת גיוס (אתמול 18:00)</div>
+            <div>🟠 <b>שיווק</b>: יד2 נכשל ב-2 נכסים. נדרש טיפול ידני</div>
+            <div>🟠 <b>קונה: מ. לוי</b>: ביקש סיור לפני 6 שעות ולא תואם</div>
+            <div>🟡 <b>קמפיין "גבעתיים 3–4 חד'"</b> ממתין לאישור כבר יומיים</div>
+          </div></div>
+        <div class="w"><div class="wt">⚡ פעילות אחרונה</div>
+          <div class="mini" style="display:flex;flex-direction:column;gap:1.4mm">
+            <div>09:12 · 🤖 Voice AI קבע פגישה עם מוכר ברח' הרצל ← דנה</div>
+            <div>09:05 · 🤖 Call Intel יצר פרופיל: "קונה 4 חד', עד 2.8M"</div>
+            <div>08:58 · 🤖 Matching שלח 3 נכסים ל-ר. כהן</div>
+            <div>08:40 · 🤖 Sourcing: 47 מוכרים חדשים מיד2</div>
+            <div>08:31 · 👤 דנה דיווחה: "גויס" ← השיווק התחיל</div>
+          </div></div>
+      </div>
+    </div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 16. MOCKUP 2: SELLER PIPELINE ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">13</div><div class="grow"><h1>מוקאפ 2: צנרת מוכרים ואישור קמפיינים</h1><div class="sub">שער האישור האנושי, ומעקב אחרי כל מוכר</div></div><span class="tag t-idea">✦ להמחשה</span></div>
+  <div class="mocknote">⚠ מוקאפ לא מחייב, כל הנתונים פיקטיביים.</div>
+  <div class="app">
+    <div class="side">
+      <div class="logo">METATRON</div>
+      <div class="it"><span class="dot" style="background:#f5b301"></span>מבט על</div>
+      <div class="it"><span class="dot" style="background:var(--d1)"></span>איתור מוכרים</div>
+      <div class="it on"><span class="dot" style="background:var(--d2)"></span>פנייה קרה</div>
+      <div class="it"><span class="dot" style="background:var(--d3)"></span>יומן ותיאום</div>
+      <div class="it"><span class="dot" style="background:var(--d4)"></span>Follow-up</div>
+      <div class="it"><span class="dot" style="background:var(--d5)"></span>שיווק</div>
+    </div>
+    <div class="main">
+      <div class="topbar"><div class="t">צנרת מוכרים</div><span class="pill">המוכרים שלי ▾</span><span class="pill">רמת גן + גבעתיים</span></div>
+      <div class="w" style="border:2px solid #fde68a;background:#fffbeb">
+        <div class="wt">🛂 ממתין לאישורך: קמפיין חדש</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:3mm">
+          <div class="mini">
+            <b style="font-size:8.5pt">"רמת גן מרכז, 3–5 חדרים, מוכרים פרטיים"</b><br>
+            86 מוכרים · מקור: יד2 (62), מדלן (17), רשימה מיובאת (7) · 4 כפילויות הוסרו<br>
+            ערוץ: וואטסאפ ← Voice AI אחרי הסכמה · עד 25 הודעות ביום · שעות 10:00–19:00<br>
+            <div style="margin-top:1.5mm;background:#fff;border:1px solid #e2e8f0;border-radius:1.5mm;padding:1.5mm 2mm">💬 <i>"שלום משה, מדברת מירב מהמשרד של דנה כהן נדל"ן. ראיתי את המודעה שלך על הדירה ברח' ביאליק. נשמח לתאם פגישה קצרה ולהציג איך אנחנו יכולים לעזור למכור מהר ובמחיר טוב. זה זמן טוב לשיחה קצרה?"</i></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1.5mm;justify-content:center">
+            <span class="btn g" style="text-align:center">✓ אשר והפעל</span>
+            <span class="btn o" style="text-align:center">✎ ערוך תסריט</span>
+            <span class="btn o" style="text-align:center">👁 צפה ברשימה</span>
+            <span class="btn r" style="text-align:center">✗ דחה</span>
+          </div>
+        </div>
+      </div>
+      <div class="kan">
+        <div class="col"><div class="ch">אותר <span>86</span></div>
+          <div class="kc" style="border-color:var(--d1)"><b>ביאליק 14, ר"ג</b>4 חד' · 2.9M · יד2</div>
+          <div class="kc" style="border-color:var(--d1)"><b>הרא"ה 101</b>3 חד' · 2.2M · מדלן</div>
+          <div class="kc" style="border-color:var(--d1)"><b>ז'בוטינסקי 50</b>5 חד' · 3.6M · יד2</div></div>
+        <div class="col"><div class="ch">וואטסאפ <span>31</span></div>
+          <div class="kc" style="border-color:var(--d2)"><b>קריניצי 7</b>נשלח 09:02 · ✓✓ נקרא</div>
+          <div class="kc" style="border-color:var(--d2)"><b>הירדן 22</b>ענה: "תלוי בעמלה"<br>🤖 ממשיך שיחה</div></div>
+        <div class="col"><div class="ch">הסכים לשיחה <span>9</span></div>
+          <div class="kc" style="border-color:var(--d2)"><b>אבא הלל 30</b>📞 Voice AI מתקשר ב-11:30</div>
+          <div class="kc" style="border-color:var(--d2)"><b>הרצל 12</b>📞 שיחה הסתיימה ← פגישה</div></div>
+        <div class="col"><div class="ch">פגישה נקבעה <span>5</span></div>
+          <div class="kc" style="border-color:var(--d3)"><b>הרצל 12</b>📅 ג' 21.10 · 17:00<br>👤 דנה</div>
+          <div class="kc" style="border-color:var(--d3)"><b>שד' ירושלים 5</b>📅 ד' 22.10 · 10:30<br>⚠ ממתין לדיווח</div></div>
+        <div class="col"><div class="ch">Follow-up <span>23</span></div>
+          <div class="kc" style="border-color:var(--d4)"><b>מנחם בגין 80</b>"רוצה לנסות לבד חודש"<br>⏭ הבא: 15.11 · וואטסאפ</div>
+          <div class="kc" style="border-color:var(--d4)"><b>הגפן 4</b>סבב 2 מתוך 4<br>⏭ הבא: 25.10</div></div>
+        <div class="col"><div class="ch">גויס ✓ <span>23</span></div>
+          <div class="kc" style="border-color:var(--d7)"><b>הרא"ה 40</b>בלעדיות 6 חודשים<br>📣 בשיווק · 5 ערוצים</div>
+          <div class="kc" style="border-color:var(--d7)"><b>ביאליק 3</b>📝 ממתין להזנת פרטים</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 17. MOCKUP 3: BUYER LOOP ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">13</div><div class="grow"><h1>מוקאפ 3: לופ קונה</h1><div class="sub">פרופיל, התאמות, התכתבות וסיורים במסך אחד</div></div><span class="tag t-idea">✦ להמחשה</span></div>
+  <div class="mocknote">⚠ מוקאפ לא מחייב, כל הנתונים פיקטיביים.</div>
+  <div class="app">
+    <div class="side">
+      <div class="logo">METATRON</div>
+      <div class="it"><span class="dot" style="background:#f5b301"></span>מבט על</div>
+      <div class="it"><span class="dot" style="background:var(--d6)"></span>שיחות</div>
+      <div class="it on"><span class="dot" style="background:var(--d7)"></span>קונים והתאמות</div>
+      <div class="it"><span class="dot" style="background:var(--d8)"></span>עסקאות</div>
+    </div>
+    <div class="main">
+      <div class="topbar"><div class="t">רונית כהן · קונה</div><span class="pill" style="background:#dcfce7;color:#166534;font-weight:700">● לופ פעיל · סבב 3</span><span class="btn o">⏸ עצור לופ</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1.5fr 1.2fr;gap:2.5mm;flex:1;min-height:0">
+        <div style="display:flex;flex-direction:column;gap:2.5mm">
+          <div class="w"><div class="wt">🎯 פרופיל (מתוך שיחה + משוב)</div>
+            <div class="mini" style="display:flex;flex-direction:column;gap:1mm">
+              <div>💰 תקציב: <b>2.4M – 2.8M</b></div>
+              <div>📍 אזור: <b>גבעתיים, ר"ג צפון</b></div>
+              <div>🛏 חדרים: <b>4</b> (מינימום 3.5)</div>
+              <div>✅ חובה: ממ"ד, מעלית</div>
+              <div>⭐ רצוי: חניה, מרפסת</div>
+              <div style="background:#fef9c3;padding:1mm;border-radius:1mm">🆕 מהמשוב: "לא מתחת לקומה 2"</div>
+            </div></div>
+          <div class="w"><div class="wt">📅 סיורים</div>
+            <div class="mini" style="display:flex;flex-direction:column;gap:1mm">
+              <div>✗ 12.10 · כצנלסון 40, "קטן מדי"</div>
+              <div>✗ 15.10 · השלושה 8, "קומה 1"</div>
+              <div style="color:var(--d3);font-weight:700">⏱ 20.10 · 17:30 · ויצמן 12</div>
+            </div></div>
+          <div class="w"><div class="wt">📞 שיחה מקורית</div><div class="mini">14.10 · 6:42 דק' · <u>האזן</u> · <u>תמליל</u></div></div>
+        </div>
+        <div class="w" style="display:flex;flex-direction:column"><div class="wt">🏠 התאמות</div>
+          <div style="display:flex;flex-direction:column;gap:1.8mm">
+            <div class="kc" style="border-color:var(--d7)"><b>ויצמן 12, גבעתיים · 2.65M</b>4 חד' · קומה 3 · ממ"ד · חניה<br><span style="color:var(--d7);font-weight:800">התאמה 94%</span> · 🟢 ביקשה סיור</div>
+            <div class="kc" style="border-color:var(--d7)"><b>סירקין 7, גבעתיים · 2.55M</b>4 חד' · קומה 4 · ממ"ד<br><span style="color:var(--d7);font-weight:800">התאמה 89%</span> · 👁 נצפה</div>
+            <div class="kc" style="border-color:#94a3b8"><b>הרואה 3, ר"ג · 2.79M</b>4.5 חד' · קומה 2<br><span style="color:var(--d7);font-weight:800">התאמה 81%</span> · ✓ נשלח</div>
+            <div class="kc" style="border-color:var(--idea)"><b>🌐 מחוץ למאגר: בורוכוב 15 · 2.7M</b>מודעה פרטית ביד2 · 4 חד'<br><span style="color:var(--idea);font-weight:800">התאמה 90%</span> · 💡 להעביר לגיוס?</div>
+            <div class="kc" style="border-color:#fca5a5;opacity:.7"><b>כצנלסון 40 · 2.4M</b>✗ נדחה: "קטן מדי"</div>
+          </div></div>
+        <div class="chat"><div class="wt" style="color:#334155">💬 וואטסאפ</div>
+          <div class="bubble b-out">היי רונית 👋 מצאתי 2 דירות חדשות בגבעתיים שמתאימות בדיוק למה שחיפשת. קומה 3 ומעלה, עם ממ"ד ✓</div>
+          <div class="bubble b-out">🏠 ויצמן 12 · 4 חד' · 2.65M<br>🔗 nadlan.pro/v12</div>
+          <div class="bubble b-in">וואו, ויצמן נראית מעולה! אפשר לראות השבוע?</div>
+          <div class="bubble b-out">בטח! יש לי שני מועדים פנויים: ב' 20.10 ב-17:30, או ג' 21.10 ב-10:00. מה נוח לך?</div>
+          <div class="bubble b-in">ב' ב-17:30 👍</div>
+          <div class="bubble b-out">מעולה, קבעתי ✓ דנה תפגוש אותך בכניסה לבניין. אשלח תזכורת שעתיים לפני.</div>
+          <div class="mini" style="text-align:center;margin-top:auto;color:#64748b">🤖 מנוהל ע"י סוכן ההתאמות · המתווך יכול להיכנס לשיחה</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 18. MOCKUP 4: CALL INTEL ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">13</div><div class="grow"><h1>מוקאפ 4: מודיעין שיחות</h1><div class="sub">מהקלטה לתמליל, ומשם לפרופיל קונה ב-CRM</div></div><span class="tag t-idea">✦ להמחשה</span></div>
+  <div class="mocknote">⚠ מוקאפ לא מחייב, כל הנתונים פיקטיביים.</div>
+  <div class="app">
+    <div class="side">
+      <div class="logo">METATRON</div>
+      <div class="it"><span class="dot" style="background:#f5b301"></span>מבט על</div>
+      <div class="it on"><span class="dot" style="background:var(--d6)"></span>שיחות</div>
+      <div class="it"><span class="dot" style="background:var(--d7)"></span>קונים והתאמות</div>
+      <div style="height:4mm"></div>
+      <div class="mini" style="color:#94a3b8;padding:0 2mm">היום</div>
+      <div class="it on" style="font-size:7pt">📞 054-•••-1234 · 6:42</div>
+      <div class="it" style="font-size:7pt">📞 052-•••-8890 · 2:10</div>
+      <div class="it" style="font-size:7pt">📞 050-•••-4471 · 9:05</div>
+      <div class="it" style="font-size:7pt">📞 053-•••-0012 · 0:48</div>
+    </div>
+    <div class="main">
+      <div class="topbar"><div class="t">שיחה נכנסת · 054-•••-1234 · 14.10 · 10:22</div><span class="pill">ליד ממודעה: ויצמן 12 (יד2)</span></div>
+      <div class="w"><div class="wt">🎧 הקלטה</div>
+        <svg viewBox="0 0 600 40" style="width:100%;height:12mm">
+          <g fill="#a5b4fc">
+            <rect x="0" y="15" width="4" height="10"/><rect x="8" y="10" width="4" height="20"/><rect x="16" y="5" width="4" height="30"/><rect x="24" y="12" width="4" height="16"/><rect x="32" y="8" width="4" height="24"/><rect x="40" y="14" width="4" height="12"/><rect x="48" y="4" width="4" height="32"/><rect x="56" y="10" width="4" height="20"/><rect x="64" y="16" width="4" height="8"/><rect x="72" y="7" width="4" height="26"/><rect x="80" y="12" width="4" height="16"/><rect x="88" y="3" width="4" height="34"/><rect x="96" y="11" width="4" height="18"/><rect x="104" y="15" width="4" height="10"/><rect x="112" y="6" width="4" height="28"/><rect x="120" y="13" width="4" height="14"/><rect x="128" y="9" width="4" height="22"/><rect x="136" y="16" width="4" height="8"/><rect x="144" y="5" width="4" height="30"/><rect x="152" y="12" width="4" height="16"/><rect x="160" y="8" width="4" height="24"/><rect x="168" y="14" width="4" height="12"/><rect x="176" y="6" width="4" height="28"/><rect x="184" y="10" width="4" height="20"/><rect x="192" y="15" width="4" height="10"/><rect x="200" y="4" width="4" height="32"/><rect x="208" y="11" width="4" height="18"/><rect x="216" y="7" width="4" height="26"/><rect x="224" y="13" width="4" height="14"/><rect x="232" y="9" width="4" height="22"/>
+          </g>
+          <g fill="#e2e8f0">
+            <rect x="240" y="12" width="4" height="16"/><rect x="248" y="6" width="4" height="28"/><rect x="256" y="14" width="4" height="12"/><rect x="264" y="8" width="4" height="24"/><rect x="272" y="4" width="4" height="32"/><rect x="280" y="11" width="4" height="18"/><rect x="288" y="15" width="4" height="10"/><rect x="296" y="7" width="4" height="26"/><rect x="304" y="12" width="4" height="16"/><rect x="312" y="5" width="4" height="30"/><rect x="320" y="10" width="4" height="20"/><rect x="328" y="14" width="4" height="12"/><rect x="336" y="8" width="4" height="24"/><rect x="344" y="3" width="4" height="34"/><rect x="352" y="12" width="4" height="16"/><rect x="360" y="9" width="4" height="22"/><rect x="368" y="15" width="4" height="10"/><rect x="376" y="6" width="4" height="28"/><rect x="384" y="11" width="4" height="18"/><rect x="392" y="7" width="4" height="26"/><rect x="400" y="13" width="4" height="14"/><rect x="408" y="5" width="4" height="30"/><rect x="416" y="10" width="4" height="20"/><rect x="424" y="16" width="4" height="8"/><rect x="432" y="8" width="4" height="24"/><rect x="440" y="12" width="4" height="16"/><rect x="448" y="4" width="4" height="32"/><rect x="456" y="11" width="4" height="18"/><rect x="464" y="14" width="4" height="12"/><rect x="472" y="7" width="4" height="26"/><rect x="480" y="10" width="4" height="20"/><rect x="488" y="15" width="4" height="10"/><rect x="496" y="6" width="4" height="28"/><rect x="504" y="12" width="4" height="16"/><rect x="512" y="9" width="4" height="22"/><rect x="520" y="13" width="4" height="14"/><rect x="528" y="5" width="4" height="30"/><rect x="536" y="11" width="4" height="18"/><rect x="544" y="15" width="4" height="10"/><rect x="552" y="8" width="4" height="24"/><rect x="560" y="12" width="4" height="16"/><rect x="568" y="16" width="4" height="8"/><rect x="576" y="10" width="4" height="20"/><rect x="584" y="14" width="4" height="12"/><rect x="592" y="17" width="4" height="6"/>
+          </g>
+        </svg>
+        <div class="mini">▶ 2:31 / 6:42 · זיהוי דוברים: מתווך (דנה) / לקוח · שפה: עברית</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:2.5mm;flex:1;min-height:0">
+        <div class="chat" style="background:#f8fafc;border:1px solid #e2e8f0"><div class="wt">📝 תמליל</div>
+          <div class="bubble b-in"><b>לקוח:</b> שלום, אני מתקשרת בקשר לדירה בויצמן. היא עדיין רלוונטית?</div>
+          <div class="bubble b-out" style="background:#e0e7ff"><b>דנה:</b> כן, בטח. מה את מחפשת בדיוק?</div>
+          <div class="bubble b-in"><b>לקוח:</b> אנחנו זוג עם שני ילדים, צריכים 4 חדרים. <mark>ממ"ד חובה</mark>, וגם <mark>מעלית</mark>, יש לנו עגלה.</div>
+          <div class="bubble b-out" style="background:#e0e7ff"><b>דנה:</b> ומה התקציב?</div>
+          <div class="bubble b-in"><b>לקוח:</b> בערך <mark>עד 2.8</mark>, אולי טיפה יותר אם זה ממש מושלם. מעדיפים <mark>גבעתיים</mark> או <mark>צפון רמת גן</mark>.</div>
+          <div class="bubble b-out" style="background:#e0e7ff"><b>דנה:</b> חניה חשובה לכם?</div>
+          <div class="bubble b-in"><b>לקוח:</b> <mark>זה יהיה נחמד</mark>, אבל לא חובה…</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2.5mm">
+          <div class="w"><div class="wt">🤖 פרופיל שחולץ</div>
+            <div class="mini" style="display:flex;flex-direction:column;gap:1.2mm">
+              <div class="fld"><div class="k">שם</div>רונית כהן <span style="float:left;color:var(--ok)">98%</span></div>
+              <div class="fld"><div class="k">תקציב</div>2.4M–2.8M (גמיש מעט) <span style="float:left;color:var(--ok)">92%</span></div>
+              <div class="fld"><div class="k">אזורים</div>גבעתיים, ר"ג צפון <span style="float:left;color:var(--ok)">95%</span></div>
+              <div class="fld"><div class="k">חדרים</div>4 <span style="float:left;color:var(--ok)">97%</span></div>
+              <div class="fld"><div class="k">חובה / רצוי</div>ממ"ד, מעלית / חניה <span style="float:left;color:var(--wip)">84%</span></div>
+              <div class="fld"><div class="k">הרכב</div>זוג + 2 ילדים <span style="float:left;color:var(--ok)">90%</span></div>
+            </div></div>
+          <div class="w"><div class="wt">📌 סיכום ומשימות</div><div class="mini">מתעניינת בויצמן 12. רוצה סיור השבוע. <b>משימה:</b> לשלוח 3 נכסים דומים.</div></div>
+          <div style="display:flex;gap:1.5mm"><span class="btn g">✓ אשר והזן ל-CRM</span><span class="btn o">✎ ערוך</span><span class="btn">▶ התחל לופ</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 19. MOCKUP 5: MANAGER ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">13</div><div class="grow"><h1>מוקאפ 5: מבט מנהל משרד</h1><div class="sub">הכנסות, נכסים והתאמות בין מתווכים, שגלויות רק למנהל</div></div><span class="tag t-idea">✦ להמחשה</span></div>
+  <div class="mocknote">⚠ מוקאפ לא מחייב, כל הנתונים פיקטיביים.</div>
+  <div class="app">
+    <div class="side">
+      <div class="logo">METATRON</div>
+      <div class="it"><span class="dot" style="background:#f5b301"></span>מבט על</div>
+      <div class="it on"><span class="dot" style="background:var(--d0)"></span>ניהול משרד</div>
+      <div class="it"><span class="dot" style="background:var(--d8)"></span>הכנסות</div>
+      <div class="it"><span class="dot" style="background:#94a3b8"></span>צוות והרשאות</div>
+      <div style="margin-top:6mm" class="mini"><span style="color:#fde68a">👑 מחובר כמנהל</span></div>
+    </div>
+    <div class="main">
+      <div class="topbar"><div class="t">ניהול משרד · אוקטובר 2026</div><span class="pill">כל המתווכים (4)</span></div>
+      <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi" style="border-top-color:var(--d8)"><div class="v">₪ 312K</div><div class="l">הכנסות החודש (משרד)</div><div class="d">▲ 18% מספטמבר</div></div>
+        <div class="kpi" style="border-top-color:var(--d5)"><div class="v">38</div><div class="l">נכסים פעילים</div><div class="d">▲ 5</div></div>
+        <div class="kpi" style="border-top-color:var(--d7)"><div class="v">7</div><div class="l">עסקאות שנסגרו</div><div class="d">▲ 2</div></div>
+        <div class="kpi" style="border-top-color:var(--d0)"><div class="v">₪ 4,180</div><div class="l">עלות AI וטלפוניה</div><div class="d" style="color:var(--mute)">1.3% מההכנסות</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:2.5mm">
+        <div class="w"><div class="wt">💰 הכנסות לפי מתווך</div>
+          <div class="bars" style="height:34mm;margin-bottom:5mm">
+            <div class="b" style="height:92%;background:var(--d0)"><em>₪118K</em><span>דנה</span></div>
+            <div class="b" style="height:70%;background:#8b5cf6"><em>₪89K</em><span>יוסי</span></div>
+            <div class="b" style="height:50%;background:#a78bfa"><em>₪64K</em><span>מיכל</span></div>
+            <div class="b" style="height:32%;background:#c4b5fd"><em>₪41K</em><span>אבי</span></div>
+          </div></div>
+        <div class="w"><div class="wt">👥 ביצועי צוות</div>
+          <table style="font-size:7pt">
+            <tr><th>מתווך</th><th>גיוסים</th><th>סיורים</th><th>SLA</th></tr>
+            <tr><td>דנה</td><td>9</td><td>24</td><td>🟢</td></tr>
+            <tr><td>יוסי</td><td>6</td><td>19</td><td>🟠</td></tr>
+            <tr><td>מיכל</td><td>5</td><td>15</td><td>🟢</td></tr>
+            <tr><td>אבי</td><td>3</td><td>8</td><td>🟢</td></tr>
+          </table></div>
+      </div>
+      <div class="w" style="border:2px solid #c4b5fd;background:#faf5ff"><div class="wt">🔗 התאמות בין מתווכים <span class="tag t-idea">רק המנהל רואה</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2mm">
+          <div class="kc" style="border-color:var(--d0)"><b>קונה של יוסי ↔ נכס של דנה</b>"משפחת לוי" ↔ סירקין 7 · התאמה 91%<br><span class="btn g" style="font-size:6.5pt;margin-top:1mm">חבר בין המתווכים</span> <span class="btn o" style="font-size:6.5pt">התעלם</span></div>
+          <div class="kc" style="border-color:var(--d0)"><b>קונה של מיכל ↔ נכס של אבי</b>"ר. אברהם" ↔ הרא"ה 40 · התאמה 86%<br><span class="btn g" style="font-size:6.5pt;margin-top:1mm">חבר בין המתווכים</span> <span class="btn o" style="font-size:6.5pt">התעלם</span></div>
+        </div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2.5mm;flex:1">
+        <div class="w"><div class="wt">🔐 בקשות שיתוף ממתינות</div>
+          <div class="mini" style="display:flex;flex-direction:column;gap:1.4mm">
+            <div>מיכל מבקשת גישה ל<b>נכס ז'בוטינסקי 50</b> (של יוסי) · <u>אשר</u> · <u>דחה</u></div>
+            <div>אבי מבקש גישה ל<b>לקוח "ש. פרץ"</b> (של דנה) · <u>אשר</u> · <u>דחה</u></div>
+          </div></div>
+        <div class="w"><div class="wt">🚪 שינויים בצוות</div>
+          <div class="mini">רון (עזב 01.10) · 14 נכסים ו-37 לקוחות הועברו לדנה · ייצוא: <b>לא אושר</b></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 20. MOCKUP 6: AGENT MOBILE ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">13</div><div class="grow"><h1>מוקאפ 6: האפליקציה של המתווך</h1><div class="sub">הגדרות לסוכנים ודיווח תוצאה, בתוך nadlan-pro</div></div><span class="tag t-idea">✦ להמחשה</span></div>
+  <div class="mocknote">⚠ מוקאפ לא מחייב, כל הנתונים פיקטיביים.</div>
+  <div style="display:flex;justify-content:space-between;gap:4mm;margin-top:4mm">
+    <div class="phone"><div class="screen"><div class="sh">📅 כללי זמינות לתיאום</div><div class="sb">
+      <div class="fld"><div class="k">ימים לפגישות גיוס</div>א' ב' ג' ד' ה'</div>
+      <div class="fld"><div class="k">שעות</div>10:00–13:00 · 16:00–19:30</div>
+      <div class="fld"><div class="k">אזורים</div>רמת גן, גבעתיים, בני ברק</div>
+      <div class="fld"><div class="k">מרווח בין פגישות</div>30 דק' + זמן נסיעה</div>
+      <div class="fld"><div class="k">מקסימום פגישות ביום</div>4</div>
+      <div class="fld"><div class="k">סיורים</div>גם בשישי 9:00–12:00</div>
+      <div class="fld" style="display:flex;justify-content:space-between;align-items:center"><span>סנכרון Google Calendar</span><span class="tog"></span></div>
+      <div class="fld" style="display:flex;justify-content:space-between;align-items:center"><span>אישור לפני קביעה</span><span class="tog off"></span></div>
+    </div></div></div>
+    <div class="phone"><div class="screen"><div class="sh">↻ תוכנית Follow-up</div><div class="sb">
+      <div class="mini">למוכרים שלא גויסו:</div>
+      <div class="fld" style="border-inline-start:3px solid var(--d4)"><div class="k">אחרי 3 ימים · וואטסאפ</div>תודה על הפגישה + סיכום</div>
+      <div class="fld" style="border-inline-start:3px solid var(--d4)"><div class="k">אחרי שבועיים · וואטסאפ</div>עדכון שוק באזור</div>
+      <div class="fld" style="border-inline-start:3px solid var(--d4)"><div class="k">אחרי חודש · Voice AI</div>"איך מתקדמת המכירה?"</div>
+      <div class="fld" style="border-inline-start:3px solid var(--d4)"><div class="k">אחרי חודשיים · וואטסאפ</div>הצעה לפגישה חוזרת</div>
+      <div class="fld"><div class="k">טון</div>חם, לא לוחץ</div>
+      <div class="fld"><div class="k">עצירה אוטומטית</div>אחרי 4 סבבים בלי תגובה</div>
+      <div class="btn" style="text-align:center">+ הוסף שלב</div>
+    </div></div></div>
+    <div class="phone"><div class="screen"><div class="sh">📝 דיווח תוצאת פגישה</div><div class="sb">
+      <div class="mini"><b>הרצל 12, ר"ג</b> · משה לוי<br>היום 17:00 · פגישת גיוס</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5mm">
+        <div class="fld" style="background:#dcfce7;border-color:#86efac;text-align:center;font-weight:800">✓ גויס</div>
+        <div class="fld" style="text-align:center;font-weight:800">✗ לא גויס</div>
+      </div>
+      <div class="fld"><div class="k">סוג</div>בלעדיות · 6 חודשים</div>
+      <div class="fld"><div class="k">מחיר מבוקש</div>₪ 2,950,000</div>
+      <div class="fld" style="background:#eef2ff"><div class="k">🎙 הערה קולית</div>"דירה משופצת, המוכר גמיש קצת במחיר, רוצה לסיים עד פסח…"</div>
+      <div class="mini" style="color:var(--d6)">🤖 ה-AI ימלא את פרטי הנכס מההקלטה ומהתמונות</div>
+      <div class="btn g" style="text-align:center">שמור ← התחל שיווק</div>
+    </div></div></div>
+  </div>
+  <div class="grid3" style="margin-top:6mm">
+    <div class="card soft small"><b>כללי זמינות</b>: סוכן ה-Scheduling לא קובע אף פגישה מחוץ למסגרת הזו.</div>
+    <div class="card soft small"><b>תוכנית Follow-up</b>: כל מתווך מגדיר "תכנון אינטואיטיבי" משלו, ויש תבניות ברירת מחדל.</div>
+    <div class="card soft small"><b>דיווח תוצאה</b>: זה השער שמחזיר את העבודה ל-AI. <span class="tag t-idea">✦ רעיון</span> הערה קולית במקום טופס.</div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= MOCKUP 7: COLLAB ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">13</div><div class="grow"><h1>מוקאפ 7: שיתופי פעולה</h1><div class="sub">רשת METATRON, נכסים מהקבוצות, והנכסים שלנו בשת"פ</div></div><span class="tag t-idea">✦ להמחשה</span></div>
+  <div class="mocknote">⚠ מוקאפ לא מחייב, כל הנתונים פיקטיביים.</div>
+  <div class="app">
+    <div class="side">
+      <div class="logo">METATRON</div>
+      <div class="it"><span class="dot" style="background:#f5b301"></span>מבט על</div>
+      <div class="it"><span class="dot" style="background:var(--d5)"></span>שיווק</div>
+      <div class="it"><span class="dot" style="background:var(--d7)"></span>קונים והתאמות</div>
+      <div class="it on"><span class="dot" style="background:var(--d9)"></span>שיתופי פעולה</div>
+      <div style="height:5mm"></div>
+      <div class="mini" style="color:#94a3b8;padding:0 2mm;margin-bottom:1mm">קבוצות מחוברות</div>
+      <div class="it" style="font-size:7pt">🔗 מתווכי ר"ג <span style="color:#4ade80">●</span></div>
+      <div class="it" style="font-size:7pt">🔗 שת"פ גבעתיים <span style="color:#4ade80">●</span></div>
+      <div class="it" style="font-size:7pt">🔔 נדל"ן מרכז <span style="color:#4ade80">●</span></div>
+      <div class="it" style="font-size:7pt">🔗 מתווכים ב"ב <span style="color:#fbbf24">●</span></div>
+    </div>
+    <div class="main">
+      <div class="topbar"><div class="t">שיתופי פעולה</div>
+        <span class="pill" style="background:var(--d9);color:#fff;font-weight:700">רשת METATRON · 214</span>
+        <span class="pill">מהקבוצות שלי · 87</span>
+        <span class="pill">הנכסים שלי בשת"פ · 12</span></div>
+
+      <div class="w" style="border:2px solid #f0abfc;background:#fdf4ff">
+        <div class="wt">💡 המלצת פרסום</div>
+        <div style="display:flex;align-items:center;gap:3mm">
+          <div class="mini" style="flex:1"><b>4 נכסים ידניים לא פורסמו בקבוצות כבר 5 ימים:</b> הרצל 12, ביאליק 3, הגפן 4, סירקין 7. ההודעות מוכנות עם תמונות וקישור.</div>
+          <span class="btn" style="background:var(--d9)">שלח עכשיו (4)</span><span class="btn o">הפוך לאוטומטי</span><span class="btn o">אחר כך</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:2.5mm;flex:1;min-height:0">
+        <div class="w" style="display:flex;flex-direction:column;gap:1.8mm"><div class="wt">🌐 נכסים פתוחים לשת"פ</div>
+          <div class="kc" style="border-color:var(--d2)"><span class="tag t-ai" style="float:left">רשת</span><b>ז'בוטינסקי 88, ר"ג · 3.1M</b>5 חד' · קומה 6 · ממ"ד · חניה<br>👤 מתווך מטפל: אורית ל. · "נדל"ן השרון" · 052-•••-4410<br><span style="color:var(--d7);font-weight:800">🎯 3 קונים שלך מתאימים</span> · <u>תאם סיור עם המתווך</u></div>
+          <div class="kc" style="border-color:#15803d"><span class="tag t-ok" style="float:left">קבוצה</span><b>כצנלסון 15, גבעתיים · 2.75M</b>4 חד' · קומה 2 · ממ"ד<br>💬 מתוך "שת"פ גבעתיים" · פורסם ע"י רוני ש. (לא במערכת)<br><span style="color:var(--d7);font-weight:800">🎯 2 קונים מתאימים</span> · 🤖 נוסחה פנייה למתווך</div>
+          <div class="kc" style="border-color:#15803d"><span class="tag t-ok" style="float:left">קבוצה</span><b>הרא"ה 210, ר"ג · 2.2M</b>3 חד' · קומה 1<br>💬 מתוך "מתווכי ר"ג" · זוהה ב-3 קבוצות ← <b>אוחד</b><br><span class="mute">אין התאמות כרגע</span></div>
+          <div class="kc" style="border-color:var(--d2)"><span class="tag t-ai" style="float:left">רשת</span><b>ויצמן 40, גבעתיים · 2.9M</b>4.5 חד' · פנטהאוז<br>👤 מתווך מטפל: גיל מ. · "בית ונוף"<br><span style="color:var(--d7);font-weight:800">🎯 1 קונה מתאים</span></div>
+          <div style="margin-top:auto" class="w soft">
+            <div class="wt">💬 הודעה מקורית מהקבוצה ← מה חולץ</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:2mm">
+              <div class="bubble b-in" style="max-width:100%;margin:0">🔥 בלעדי! כצנלסון 15 גבעתיים, 4 חד' משופצת, ק"2, ממ"ד, 2.75. 50/50 שת"פ. רוני 054-•••-2201</div>
+              <div class="mini">עיר: גבעתיים · רחוב: כצנלסון 15<br>חדרים: 4 · קומה: 2 · ממ"ד ✓<br>מחיר: 2,750,000 · שת"פ: 50/50<br>מתווך: רוני ש. · 054-•••-2201</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2.5mm">
+          <div class="w"><div class="wt">🏠 הנכסים שלי בשת"פ</div>
+            <table style="font-size:6.8pt">
+              <tr><th>נכס</th><th>רשת</th><th>קבוצות</th><th>מצב</th></tr>
+              <tr><td>הרא"ה 40</td><td>✓</td><td>3</td><td><span class="tog"></span> אוטו</td></tr>
+              <tr><td>ז'בוטינסקי 50</td><td>✓</td><td>2</td><td><span class="tog"></span> אוטו</td></tr>
+              <tr><td>הרצל 12</td><td>✓</td><td>4</td><td><span class="tog off"></span> ידני</td></tr>
+              <tr><td>ביאליק 3</td><td>✓</td><td>2</td><td><span class="tog off"></span> ידני</td></tr>
+              <tr><td>הגפן 4</td><td>✓</td><td>3</td><td><span class="tog off"></span> ידני</td></tr>
+            </table></div>
+          <div class="w"><div class="wt">⏱ לוח פרסום אוטומטי</div>
+            <div class="mini" style="display:flex;flex-direction:column;gap:1.2mm">
+              <div>📅 כל יום · 10:00–12:00 (פיזור אקראי)</div>
+              <div>🔁 אותו נכס באותה קבוצה: פעם ב-3 ימים</div>
+              <div>🚦 מקסימום 2 פרסומים לקבוצה ביום</div>
+              <div style="color:var(--d7)">✓ היום: 6 פורסמו · 0 שגיאות</div>
+            </div></div>
+          <div class="w"><div class="wt">🔗 חיבור וואטסאפ</div>
+            <div class="mini" style="display:flex;flex-direction:column;gap:1.2mm">
+              <div><b>מצב:</b> מכשיר מקושר · מחובר ✓</div>
+              <div><b>קריאה:</b> 4 קבוצות · <b>פרסום:</b> 3 קבוצות</div>
+              <div style="background:#fef9c3;padding:1mm;border-radius:1mm">⚠ חיבור לא רשמי. יש סיכון לחסימת המספר</div>
+              <div><u>החלף להאזנה להתראות</u> · <u>מספר הבוט להעברה</u></div>
+            </div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 21. ROADMAP ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">14</div><div class="grow"><h1>Roadmap</h1><div class="sub">סדר הבנייה המוצע. אין עדיין תאריכים</div></div><span class="tag t-wip">● הצעה</span></div>
+  <div class="rm">
+    <div class="ph0"><div class="c" style="background:#334155">0</div></div>
+    <div class="bx2"><b>יסודות</b><div class="small">ריפו ו-Vault · מודל multi-tenant + RBAC (<code>authz</code>, Security Rules, טסטים) · FastAPI + Event Bus + Firebase Admin · תשתית CrewAI + סוכן-על בסיסי · מספרים וירטואליים · תיקון המפתח החשוף ב-nadlan-pro</div></div>
+    <div class="ph0"><div class="c" style="background:var(--d2)">1</div></div>
+    <div class="bx2" style="border-color:#93c5fd;background:#eff6ff"><b>MVP גיוס</b> <span class="tag t-ai">הלב של המוצר</span><div class="small">Sourcing (מקור אחד + ייבוא רשימות) ← אישור קמפיין ← וואטסאפ ← <b>Voice AI יוצא</b> ← Scheduling ← דיווח תוצאה באפליקציה ← Follow-up</div></div>
+    <div class="ph0"><div class="c" style="background:var(--d5)">2</div></div>
+    <div class="bx2"><b>שיווק</b><div class="small">Listing QA + קופי · 2–3 ערוצים ראשונים (פייסבוק/אינסטגרם כולל fb-poster, אתר המשרד, יד2) · מדידת לידים לפי ערוץ · <b>רשת שת"פ</b>: פתיחת נכס לשת"פ ופרסום בקבוצות (אוטו או ידני)</div></div>
+    <div class="ph0"><div class="c" style="background:var(--d6)">3</div></div>
+    <div class="bx2"><b>מודיעין שיחות</b><div class="small">הקלטה במספר וירטואלי ← תמלול עברית ← פרופיל קונה ← אישור המתווך ← CRM</div></div>
+    <div class="ph0"><div class="c" style="background:var(--d7)">4</div></div>
+    <div class="bx2"><b>התאמות, לופ קונה ו-Deal Assist</b><div class="small">פורט של matching.ts · התאמות פנימיות ← מאגר שוק חיצוני · התכתבות בוואטסאפ · תיאום סיורים · דיווח סיור · הצעות ומשא ומתן · <b>שאיבה מקבוצות וואטסאפ</b> והתאמות מול מאגרי שת"פ</div></div>
+    <div class="ph0"><div class="c" style="background:var(--d0)">5</div></div>
+    <div class="bx2"><b>דשבורד</b><div class="small">מוקאפ מלא ב-Google Stitch ← מימוש: מבט על, מחלקות, ניהול משרד, הגדרות</div></div>
+    <div class="ph0"><div class="c" style="background:#94a3b8">+</div></div>
+    <div class="bx2"><b>הרחבות</b><div class="small">ערוצי פרסום נוספים · Voice AI לפולואפ · רעיונות מעמוד 29 · Onboarding עצמי למשרדים חדשים (SaaS)</div></div>
+  </div>
+  <div class="callout" style="margin-top:4mm"><b>למה בסדר הזה?</b> גיוס נכסים הוא צוואר הבקבוק של כל משרד תיווך, ובלי נכסים אין מה לשווק או להתאים. בנוסף, שלב 1 בודק מוקדם את הסיכונים הגדולים ביותר: וואטסאפ קר, איכות Voice AI בעברית והתאמה לחוק.</div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 22. RISKS ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">15</div><div class="grow"><h1>סיכונים ו-Compliance</h1><div class="sub">מה יכול להשתבש, ומה עושים לגבי זה</div></div></div>
+  <div class="grid2">
+    <div class="risk"><b>⚖ חוק הספאם (סעיף 30א)</b><span class="lv t-open">גבוה</span><div class="small">פנייה שיווקית בלי הסכמה עלולה להיחשב "דבר פרסומת". <b>מענה:</b> ייעוץ משפטי, הודעת פתיחה שאינה פרסומית, opt-out בכל הודעה ותיעוד הסכמות.</div></div>
+    <div class="risk"><b>📵 חסימה בוואטסאפ</b><span class="lv t-open">גבוה</span><div class="small">פניות קרות בכמות גבוהה מובילות לחסימת המספר. <b>מענה:</b> templates מאושרים, rate limits, חימום מספרים ומעקב אחרי quality rating.</div></div>
+    <div class="risk"><b>🎙 הקלטת שיחות ופרטיות</b><span class="lv t-wip">בינוני</span><div class="small">חובת יידוע, ותיקון 13 לחוק הגנת הפרטיות. <b>מענה:</b> הודעה מוקלטת בתחילת השיחה, מדיניות שמירה ומחיקה, הצפנה והרשאות.</div></div>
+    <div class="risk"><b>🤖 גילוי נאות ב-Voice AI</b><span class="lv t-wip">בינוני</span><div class="small">המוכר צריך לדעת שהוא מדבר עם AI. <b>מענה:</b> משפט גילוי בפתיחה ואפשרות להעביר לאדם.</div></div>
+    <div class="risk"><b>🕷 סריקה ופרסום ביד2 ומדלן</b><span class="lv t-open">גבוה</span><div class="small">תנאי השימוש אוסרים, יש חסימות, ומבנה האתר משתנה. <b>מענה:</b> לבדוק חבילות מתווכים ופידים רשמיים לפני אוטומציה של הדפדפן, ולשמור על adapter מבודד.</div></div>
+    <div class="risk"><b>🗣 איכות עברית</b><span class="lv t-wip">בינוני</span><div class="small">קול, תמלול ושמות רחובות. <b>מענה:</b> פיילוט על נתונים אמיתיים לפני בחירת ספק, ותיקון ידני שמשפר את המערכת.</div></div>
+    <div class="risk"><b>🔓 דליפת מידע בין מתווכים</b><span class="lv t-open">גבוה</span><div class="small">סוכן LLM עלול "לראות" יותר ממה שמותר. <b>מענה:</b> אין לו גישה ישירה ל-DB, יש Repositories לפי actor, טסטים ו-audit.</div></div>
+    <div class="risk"><b>💸 עלויות LLM וקול</b><span class="lv t-wip">בינוני</span><div class="small">לופים אינסופיים ושיחות ארוכות. <b>מענה:</b> תקציב לכל משרד, מגבלות, ניתוב למודל זול, והצגת העלות בדשבורד.</div></div>
+    <div class="risk"><b>🔑 מפתח API חשוף</b><span class="lv t-open">גבוה</span><div class="small">במצב הקיים ב-nadlan-pro. <b>מענה:</b> להחליף את המפתח ולהעביר את הקריאה לשרת. זו משימה ראשונה בשלב 0.</div></div>
+    <div class="risk"><b>🔗 חסימה במכשיר מקושר</b><span class="lv t-open">גבוה</span><div class="small">חיבור לא רשמי לוואטסאפ לצורך קבוצות. <b>מענה:</b> בחירה מודעת של המתווך, מגבלות קצב, פיזור זמנים, והתראות התנתקות. חלופות: התראות או בוט.</div></div>
+    <div class="risk"><b>🧾 בעלות וכפילויות בנכסי שת"פ</b><span class="lv t-wip">בינוני</span><div class="small">אותו נכס אצל כמה מתווכים, ושאלה מי מחזיק בו. <b>מענה:</b> דה-דופ, שמירת המקור וההודעה המקורית, ונכס מקבוצה נשאר רק במשרד ששאב אותו.</div></div>
+    <div class="risk"><b>🧩 תלות ב-nadlan-pro</b><span class="lv t-wip">בינוני</span><div class="small">המעבר מ-<code>users/{uid}</code> ל-<code>offices/</code>. <b>מענה:</b> Repository שתומך בשני המבנים ומעבר הדרגתי.</div></div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 23. OPEN QUESTIONS 1 ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">16</div><div class="grow"><h1>שאלות פתוחות (א')</h1><div class="sub">לסמן ✓ כשנסגר ולכתוב את ההחלטה בשוליים</div></div><span class="tag t-open">? פתוח</span></div>
+
+  <div class="qgrp" style="background:var(--d2)">Workflow ותהליכים</div>
+  <ul class="qlist">
+    <li><span class="bx"></span><span class="q">נכס שנמצא "מחוץ למאגר" ומתאים לקונה: האם הוא נכנס אוטומטית ל-Sourcing ול-Outreach כדי לגייס אותו?<i>זה מחבר את צד הקונה לצד המוכר, וזה עשוי להיות פיצ'ר מרכזי</i></span></li>
+    <li><span class="bx"></span><span class="q">מתי ה-AI מעביר שיחת וואטסאפ או שיחה קולית למתווך אנושי (handoff)?<i>שאלה על עמלה, כעס, בקשה מפורשת לדבר עם אדם…</i></span></li>
+    <li><span class="bx"></span><span class="q">האם יש Follow-up גם לקונים שהפסיקו להגיב בלופ, ולא רק למוכרים?</span></li>
+    <li><span class="bx"></span><span class="q">אחרי "סגירת חיזורים": האם חוזרים פעם אחת אחרי X חודשים, או שזה סופי לגמרי?</span></li>
+    <li><span class="bx"></span><span class="q">איך המתווך מדווח תוצאת פגישה: טופס, הערה קולית או שניהם? ומה קורה אם הוא לא מדווח?</span></li>
+    <li><span class="bx"></span><span class="q">טופס הזמנת שירותי תיווך והסכם בלעדיות: מתי נחתמים ואיך? (ראו גם רעיונות)</span></li>
+    <li><span class="bx"></span><span class="q">עסקה שמשותפת לשני מתווכים במשרד: איך מתחלקת העמלה ואיך היא נרשמת?</span></li>
+    <li><span class="bx"></span><span class="q">שכירות: אותם תהליכים כמו במכירה, תהליך מקוצר, או מחוץ להיקף כרגע?</span></li>
+    <li><span class="bx"></span><span class="q">שיתוף פעולה בין משרדים (ה-collab הקיים ב-nadlan-pro): איך הוא משתלב?</span></li>
+    <li><span class="bx"></span><span class="q">מי מאשר קמפיין במשרד מנוהל: המתווך, המנהל, או שניהם?</span></li>
+  </ul>
+
+  <div class="qgrp" style="background:var(--d0)">מוצר ומודל עסקי</div>
+  <ul class="qlist">
+    <li><span class="bx"></span><span class="q">מודל תמחור ה-SaaS: לפי מתווך, לפי משרד, לפי שימוש, או אחוז מעסקה?</span></li>
+    <li><span class="bx"></span><span class="q">מי משלם על עלויות AI, טלפוניה ו-Voice: כלולות במנוי, או מועברות למשרד לפי שימוש?</span></li>
+    <li><span class="bx"></span><span class="q">Onboarding של משרד חדש: הרשמה עצמית או הקמה מלווה? חיבור מספרים, וואטסאפ וערוצים</span></li>
+    <li><span class="bx"></span><span class="q">מיתוג למשרד (white-label): שם המשרד בהודעות ובקול, לוגו באתר ובדפי הנכס</span></li>
+    <li><span class="bx"></span><span class="q">שפות נוספות לפנייה וללופ קונה: ערבית, רוסית, אנגלית?</span></li>
+  </ul>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 24. OPEN QUESTIONS 2 ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">16</div><div class="grow"><h1>שאלות פתוחות (ב')</h1><div class="sub">טכנולוגיה, ספקים ו-Compliance</div></div><span class="tag t-open">? פתוח</span></div>
+
+  <div class="qgrp" style="background:var(--d6)">טכנולוגיה וספקים</div>
+  <ul class="qlist">
+    <li><span class="bx"></span><span class="q">ספק מרכזיית ענן ומספרים וירטואליים: Twilio, Voicenter או אחר?<i>חשוב: מספרים ישראליים, הקלטה, webhooks ו-SIP ל-Voice AI</i></span></li>
+    <li><span class="bx"></span><span class="q">ספק Voice AI: Vapi, Retell או ElevenLabs? ייבחר בפיילוט איכות עברית</span></li>
+    <li><span class="bx"></span><span class="q">תמלול עברית: Whisper, ivrit.ai או Google STT?</span></li>
+    <li><span class="bx"></span><span class="q">פרסום ביד2 ובמדלן: חבילת מתווכים, פיד, API רשמי או אוטומציה של הדפדפן?</span></li>
+    <li><span class="bx"></span><span class="q">עתיד ה-Cloudflare Worker הקיים: להשאיר את סוכן הוואטסאפ שם או להעביר ל-Python?</span></li>
+    <li><span class="bx"></span><span class="q">לוח זמנים להעברת nadlan-pro מ-<code>users/{uid}</code> ל-<code>offices/</code></span></li>
+    <li><span class="bx"></span><span class="q">דשבורד: אפליקציית Web נפרדת, חלק מ-nadlan-pro (Expo Web), או שניהם?</span></li>
+    <li><span class="bx"></span><span class="q">אירוח: GCP (קרוב ל-Firebase), AWS או Railway/Fly? ומה עם תשתית Redis ו-Postgres?</span></li>
+    <li><span class="bx"></span><span class="q">יומן: Google Calendar כמקור אמת, או היומן הפנימי (<code>tasks</code>) עם סנכרון?</span></li>
+    <li><span class="bx"></span><span class="q">מאגרים חיצוניים לאיתור (טאבו, עסקאות נדל"ן, ספקי לידים): אילו, ובאיזו עלות?</span></li>
+    <li><span class="bx"></span><span class="q">איך מודדים איכות סוכנים (evals): שיחות לדוגמה, ציון אנושי, A/B לתסריטים?</span></li>
+  </ul>
+
+  <div class="qgrp" style="background:var(--d8)">משפטי ו-Compliance</div>
+  <ul class="qlist">
+    <li><span class="bx"></span><span class="q">חוות דעת משפטית על פנייה קרה בוואטסאפ ובטלפון למוכרים פרטיים</span></li>
+    <li><span class="bx"></span><span class="q">תיקון 13 לחוק הגנת הפרטיות: רישום מאגר, ממונה הגנת פרטיות, אבטחת מידע</span></li>
+    <li><span class="bx"></span><span class="q">מדיניות שמירת הקלטות ותמלילים: כמה זמן, מי ניגש, ומחיקה לפי בקשה</span></li>
+    <li><span class="bx"></span><span class="q">חוק המתווכים: אילו מסמכים חייבים להיחתם ומתי, בהקשר של הזמנה דיגיטלית</span></li>
+    <li><span class="bx"></span><span class="q">תנאי שימוש והסכם עיבוד נתונים (DPA) מול המשרדים, כי ה-SaaS מעבד מידע של לקוחות שלהם</span></li>
+  </ul>
+
+  <div class="qgrp" style="background:var(--d9)">רשת שיתופי פעולה</div>
+  <ul class="qlist">
+    <li><span class="bx"></span><span class="q">חלוקת עמלה ברירת מחדל בשת"פ (50/50?), והאם כל נכס יכול להגדיר תנאים משלו</span></li>
+    <li><span class="bx"></span><span class="q">ברשת: כתובת מלאה כולל מספר בית, או רק רחוב ושכונה?</span></li>
+    <li><span class="bx"></span><span class="q">האם משרד יכול להגביל חשיפה ברשת (לפי ערים, משרדים מסוימים או רשימה שחורה)?</span></li>
+    <li><span class="bx"></span><span class="q">האם נדרש אישור המוכר לפרסום הנכס בשת"פ, ואיך הוא מתועד?</span></li>
+    <li><span class="bx"></span><span class="q">מה עושים כששני משרדים מחזיקים את אותו נכס ברשת?</span></li>
+    <li><span class="bx"></span><span class="q">פרטיות חברי הקבוצות, ותנאי השימוש של וואטסאפ בקריאה אוטומטית: חוות דעת משפטית</span></li>
+  </ul>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 25. IDEAS ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">17</div><div class="grow"><h1>רעיונות לבדיקה</h1><div class="sub">לא בהיקף. לסמן מה מעניין</div></div><span class="tag t-idea">✦ רעיון</span></div>
+  <div class="grid2">
+    <div class="card" style="border-top:4px solid var(--idea)"><b>✍ הזמנת שירותי תיווך דיגיטלית</b><div class="small">לפני סיור, הסוכן שולח לקונה טופס לחתימה דיגיטלית, וזה תנאי לקביעת הסיור.</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>📜 הסכם בלעדיות דיגיטלי</b><div class="small">המתווך חותם עם המוכר כבר בפגישת הגיוס, מתוך האפליקציה.</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>💹 תמחור נכס אוטומטי</b><div class="small">הערכת שווי לפי עסקאות השוואה, ככלי למתווך בפגישת הגיוס (יש כבר סקיל תמחור קיים).</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>📊 דוח שבועי למוכר</b><div class="small">כמה צפיות, פניות וסיורים היו לנכס שלו. בונה אמון ומפחית לחץ על המתווך.</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>🎙 דיווח קולי אחרי פגישה</b><div class="small">המתווך מקליט הערה קולית במקום למלא טופס, וה-AI ממלא את פרטי הנכס.</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>🎬 וידאו ותמונות אוטומטיים</b><div class="small">סרטון לרילס וטיקטוק מתמונות הנכס, הום-סטיילינג וירטואלי ושיפור תמונות.</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>📉 התראת הורדת מחיר</b><div class="small">כשמחיר יורד, הסוכן שולח מיד לכל הקונים שהנכס "כמעט" התאים להם.</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>🗺 תכנון מסלול יומי</b><div class="small">פגישות וסיורים מסודרים לפי מיקום, כדי לחסוך זמן נסיעה למתווך.</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>♻ החייאת לידים ישנים</b><div class="small">הסוכן עובר על קונים ומוכרים ישנים ב-CRM ופותח איתם שיחה מחדש.</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>⭐ ביקורות והמלצות</b><div class="small">אחרי עסקה נשלחת בקשה לביקורת בגוגל, וגם בקשה להפניות (שזה מקור Sourcing).</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>📰 תוכן שוק שכונתי</b><div class="small">דוחות שוק לפי שכונה כתוכן שיווקי שמושך מוכרים.</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>🏆 לוח הישגים לצוות</b><div class="small">גיימיפיקציה למתווכים: גיוסים, סיורים ועמידה ב-SLA.</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>👀 פורטל מוכר</b><div class="small">דף אישי שבו המוכר רואה את סטטוס השיווק בזמן אמת.</div></div>
+    <div class="card" style="border-top:4px solid var(--idea)"><b>🧪 A/B לתסריטים</b><div class="small">הסוכן בודק כמה נוסחי פנייה ולומד איזה נוסח מביא יותר פגישות.</div></div>
+  </div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+<!-- ======================= 26-27. NOTES ======================= -->
+<section class="page">
+  <div class="ph"><div class="num">18</div><div class="grow"><h1>הערות</h1><div class="sub">מקום לכתיבה חופשית בזמן המעבר על המסמך</div></div></div>
+  <div class="lined"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+<section class="page">
+  <div class="ph"><div class="num">18</div><div class="grow"><h1>הערות</h1><div class="sub">החלטות חדשות, תיקונים ורעיונות</div></div></div>
+  <div class="lined"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="pf"><span>METATRON AI · מסמך אפיון v0.2</span><span class="n"></span></div>
+</section>
+
+</body>
+</html>
