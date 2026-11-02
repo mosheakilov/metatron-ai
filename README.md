@@ -87,6 +87,40 @@ failed and how to fix it) and shows it in red in Streamlit. Exit code `2`.
 - Webhook: `uvicorn metatron.channels.webhook:app --port 8000`, exposed with `cloudflared tunnel`.
 - Use a **separate number** from nadlan-pro's worker, otherwise replies go to the old webhook.
 
+## The installed product (Windows)
+
+The same OutreachFlow also runs as an installable app for a solo broker. The course demo stays in
+Streamlit; the product has its own dashboard.
+
+```
+METATRON-Setup.exe            per-user install, no admin; asks for the broker's name and WhatsApp number
+  python/                     private Python runtime with the product's packages
+  gateway/ + node/            WhatsApp linked device (Baileys), listens on 127.0.0.1 only
+  launcher                    starts the gateway, the local API and the outbox; tray icon; opens the browser
+%LOCALAPPDATA%\METATRON\      settings.json · metatron.db · WhatsApp link · logs (kept on uninstall)
+```
+
+- **Setup wizard**: name → link WhatsApp (8-character code by phone number, or QR) → import the client
+  list (Excel/CSV, Hebrew or English headers, mapping and problems shown before saving) → meeting hours.
+- **Every first message is approved by the broker** (single or bulk, editable). The opt-out line is
+  always added.
+- **Outbox pacing**: a linked device is not the official WhatsApp API, so first messages go out only in
+  working hours, with a random gap and a daily cap (default 15). Replies inside a conversation are sent
+  at once after a short "typing" pause. A message still waiting is dropped if the seller opts out.
+- **Privacy**: messages from numbers METATRON never contacted (family, other clients) are not stored.
+  When the broker writes to a seller from the phone, METATRON stops auto-replying to that seller.
+- **AI**: the app never holds an API key. With a license key it calls the relay (`relay/`, a Cloudflare
+  Worker that holds the key and limits use per license); without one, messages come from the broker's
+  template and everything else still works.
+
+```bash
+cd web && npm install && npm run build                 # dashboard -> src/metatron/product/web
+cd gateway && npm install
+python -m metatron.product.demo --home var/demo-home    # optional demo data
+METATRON_HOME=var/demo-home python -m metatron.product.launcher
+python installer/build.py                              # -> dist/METATRON-Setup-1.0.0.exe (Inno Setup 6)
+```
+
 ## What existed before vs. what was built here
 
 | Before the course (nadlan-pro) | Built in this repo |
@@ -110,9 +144,14 @@ src/metatron/
   flows/       training_flow · outreach_flow
   outreach/    store (SQLite) · scoring · drafting · replies · scheduling
   channels/    whatsapp · webhook · calendar
+  product/     settings · contacts · outbox · gateway client · server (API) · launcher · demo
   pipeline.py  deterministic steps over runs/<run_id>/
   train.py     CLI
 app/streamlit_app.py            5 screens: data · model · approval queue · conversations · calendar
+web/                            product dashboard (React + Tailwind, Hebrew RTL)
+gateway/                        WhatsApp linked-device gateway (Node, Baileys)
+relay/                          Cloudflare Worker that holds the Claude API key
+installer/                      build.py + Inno Setup script
 tests/
 docs/                           planning vault (Hebrew)
 ```
