@@ -17,5 +17,17 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.lock && pip install -e . --no-deps
-      - run: ruff check src tests app
+      - run: ruff check src tests app installer
       - run: pytest
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci && npm run build   # type-checks and builds the dashboard
+        working-directory: web
+      - run: npm ci --omit=dev && node --check index.js
+        working-directory: gateway

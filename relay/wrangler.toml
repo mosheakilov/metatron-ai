@@ -1,0 +1,12 @@
+# METATRON relay: the only place that holds the Anthropic API key.
+# Deploy:   npx wrangler kv namespace create LICENSES   (put the id below)
+#           npx wrangler secret put ANTHROPIC_API_KEY
+#           npx wrangler deploy
+# License:  npx wrangler kv key put --binding LICENSES "MTR-XXXX" '{"name":"...","daily_limit":300,"active":true}'
+name = "metatron-relay"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[[kv_namespaces]]
+binding = "LICENSES"
+id = "REPLACE_WITH_KV_ID"
