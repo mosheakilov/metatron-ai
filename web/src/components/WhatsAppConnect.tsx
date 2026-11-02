@@ -46,6 +46,9 @@ export function WhatsAppConnect({ onConnected, defaultPhone = '' }: { onConnecte
     <div className="space-y-5">
       {!waiting && (
         <>
+          {wa.status === 'expired' && (
+            <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">הקוד פג תוקף לפני שהוזן בטלפון. בקשו קוד חדש והקלידו אותו תוך דקה-שתיים.</div>
+          )}
           <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
             {([['phone', 'לפי מספר טלפון', Smartphone], ['qr', 'סריקת קוד QR', QrCode]] as const).map(([m, label, Icon]) => (
               <button key={m} onClick={() => setMode(m)}

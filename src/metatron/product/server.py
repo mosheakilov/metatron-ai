@@ -6,6 +6,9 @@ opt-out and booking. This module only wires it to settings, the outbox and the g
 
 from __future__ import annotations
 
+import hashlib
+import io
+import re
 import secrets
 from datetime import datetime
 from pathlib import Path
@@ -54,6 +57,7 @@ class SettingsIn(BaseModel):
     office_name: str | None = None
     meeting_minutes: int | None = None
     message_template: str | None = None
+    include_opt_out: bool | None = None
     availability: dict | None = None
     limits: dict | None = None
     paused: bool | None = None
@@ -85,6 +89,38 @@ class BulkIn(BaseModel):
 
 class SendIn(BaseModel):
     body: str
+
+
+class PreviewIn(BaseModel):
+    body: str
+    include_opt_out: bool | None = None  # the unsaved checkbox in the settings screen
+
+
+class MediaIn(BaseModel):
+    attach: bool
+
+
+MAX_IMAGE_MB = 15
+MEDIA_NAME = re.compile(r"^[0-9a-f]{16}\.jpg$")
+
+
+def to_jpeg(data: bytes) -> bytes:
+    """Any picture the broker uploads becomes a WhatsApp-friendly JPEG (upright, max 1600px)."""
+    from PIL import Image, ImageOps, UnidentifiedImageError
+
+    try:
+        img = Image.open(io.BytesIO(data))
+        img = ImageOps.exif_transpose(img)
+    except (UnidentifiedImageError, OSError) as e:
+        raise ValueError("הקובץ אינו תמונה. אפשר להעלות JPG, PNG או WEBP") from e
+    if img.mode != "RGB":
+        bg = Image.new("RGB", img.size, "white")
+        bg.paste(img, mask=img.convert("RGBA").split()[-1])
+        img = bg
+    img.thumbnail((1600, 1600))
+    out = io.BytesIO()
+    img.save(out, "JPEG", quality=85, optimize=True)
+    return out.getvalue()
 
 
 def create_app(ctx: Ctx) -> FastAPI:
@@ -224,16 +260,51 @@ def create_app(ctx: Ctx) -> FastAPI:
             if not s or s["status"] not in ("new", "rejected"):
                 skipped += 1
                 continue
-            made += ctx.event(event="draft", seller_id=sid).result == "drafted"
+            st = ctx.event(event="draft", seller_id=sid)
+            if st.result == "drafted":
+                made += 1
+                if ctx.settings.data["outreach_image"]:
+                    store.update_message(st.message_id, media=ctx.settings.data["outreach_image"])
         return {"drafted": made, "skipped": skipped}
 
     @app.post("/api/template/preview")
-    def template_preview(body: SendIn):
+    def template_preview(body: PreviewIn):
         from metatron.outreach.drafting import render_template
 
+        cfg = ctx.cfg
+        if body.include_opt_out is not None:
+            cfg["outreach"]["include_opt_out"] = body.include_opt_out
         sample = store.one("SELECT * FROM sellers WHERE status='new' ORDER BY rank LIMIT 1") \
             or {"name": "יעל כהן", "address": "הנשיא 10", "city": "חיפה"}
-        return {"text": render_template(body.body, sample, ctx.cfg), "seller": sample.get("name")}
+        return {"text": render_template(body.body, sample, cfg), "seller": sample.get("name")}
+
+    # ---- the picture sent with first messages ---------------------------------------------
+    @app.post("/api/media/outreach")
+    async def upload_outreach_image(file: UploadFile = File(...)):  # noqa: B008 (FastAPI idiom)
+        data = await file.read()
+        if len(data) > MAX_IMAGE_MB * 1_000_000:
+            raise HTTPException(400, f"התמונה גדולה מדי (עד {MAX_IMAGE_MB}MB)")
+        try:
+            jpeg = to_jpeg(data)
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+        name = hashlib.sha256(jpeg).hexdigest()[:16] + ".jpg"
+        (ctx.settings.media_dir / name).write_bytes(jpeg)
+        ctx.settings.update({"outreach_image": name})
+        return ctx.settings.public()
+
+    @app.delete("/api/media/outreach")
+    def remove_outreach_image():
+        # the file stays: drafts already approved with it still need it
+        ctx.settings.update({"outreach_image": ""})
+        return ctx.settings.public()
+
+    @app.get("/api/media/{name}")
+    def media(name: str):
+        f = ctx.settings.media_dir / name
+        if not MEDIA_NAME.match(name) or not f.is_file():
+            raise HTTPException(404, "not found")
+        return FileResponse(f, media_type="image/jpeg")
 
     @app.get("/api/queue")
     def queue():
@@ -250,6 +321,18 @@ def create_app(ctx: Ctx) -> FastAPI:
     def approve_many(body: BulkIn):
         results = [ctx.event(event="approve", message_id=i).result for i in body.message_ids]
         return {"approved": sum(r in ("queued", "sent") for r in results), "results": results}
+
+    @app.post("/api/queue/{message_id}/media")
+    def draft_media(message_id: int, body: MediaIn):
+        """Attach the current picture to one draft, or send that draft as text only."""
+        msg = store.message(message_id)
+        if not msg or msg["status"] != "draft" or msg["kind"] != "outreach":
+            raise HTTPException(400, "אפשר לצרף תמונה רק להודעה ראשונה שממתינה לאישור")
+        image = ctx.settings.data["outreach_image"]
+        if body.attach and not image:
+            raise HTTPException(400, "עוד לא הועלתה תמונה בהגדרות")
+        store.update_message(message_id, media=image if body.attach else None)
+        return {"media": image if body.attach else None}
 
     @app.post("/api/queue/{message_id}/reject")
     def reject(message_id: int):

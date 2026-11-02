@@ -75,7 +75,7 @@ class Store:
     def _migrate(self) -> None:
         """Columns added after the first release; old databases get them in place."""
         for table, col, ddl in [("sellers", "phone_norm", "TEXT"), ("sellers", "notes", "TEXT"),
-                                ("messages", "sent_at", "TEXT")]:
+                                ("messages", "sent_at", "TEXT"), ("messages", "media", "TEXT")]:
             if col not in {r["name"] for r in self.q(f"PRAGMA table_info({table})")}:
                 self.db.execute(f"ALTER TABLE {table} ADD COLUMN {col} {ddl}")
         for r in self.q("SELECT seller_id, phone FROM sellers WHERE phone_norm IS NULL"):
@@ -162,7 +162,7 @@ class Store:
 
     def pending_drafts(self) -> list[dict]:
         return self.q(
-            "SELECT m.id AS message_id, m.kind, m.body, s.* FROM messages m "
+            "SELECT m.id AS message_id, m.kind, m.body, m.media, s.* FROM messages m "
             "JOIN sellers s USING(seller_id) WHERE m.status='draft' ORDER BY s.rank, m.id")
 
     # ---- opt-out ---------------------------------------------------------------------

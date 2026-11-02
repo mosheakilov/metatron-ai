@@ -1,6 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { LogOut, Pause, Play } from 'lucide-react'
-import { api, type AppState, type SettingsT } from '../api'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Check, ImagePlus, LogOut, Pause, Play, Trash2 } from 'lucide-react'
+import { api, mediaUrl, type AppState, type SettingsT } from '../api'
 import { Availability } from '../components/Availability'
 import { WhatsAppConnect } from '../components/WhatsAppConnect'
 import { Button, Card, cx, Field, inputCls, PageHeader, Toggle, useToast } from '../ui'
@@ -61,7 +61,20 @@ export function Settings({ state, onSaved }: { state: AppState; onSaved: () => v
         </Section>
 
         <Section title="הודעת פתיחה" sub="הבסיס להודעה הראשונה לכל מוכר. כשהבינה המלאכותית מחוברת, היא מתאימה את הנוסח לכל מוכר ושומרת על הכוונה שלך.">
-          <TemplateEditor value={s.message_template} onChange={(message_template) => setS({ ...s, message_template })} />
+          <TemplateEditor value={s.message_template} onChange={(message_template) => setS({ ...s, message_template })}
+            optOut={s.include_opt_out} image={s.outreach_image} />
+          <div className="mt-5 grid gap-5 lg:grid-cols-2">
+            <ImagePicker image={s.outreach_image} onChange={(outreach_image) => { setS((cur) => ({ ...cur, outreach_image })); onSaved() }} />
+            <div>
+              <Checkbox checked={s.include_opt_out} onChange={(include_opt_out) => setS({ ...s, include_opt_out })}
+                label='להוסיף בסוף כל הודעה: להסרה השיבו "הסר".' />
+              <p className="mt-1.5 ps-8 text-xs text-muted leading-relaxed">
+                {s.include_opt_out
+                  ? 'מומלץ: חוק התקשורת (סעיף 30א) מחייב דרך הסרה בהודעה שיווקית, והשורה גם מקטינה את הסיכון שוואטסאפ יחסום את המספר.'
+                  : 'ההודעות יישלחו בלי שורת הסרה. מוכר שבכל זאת יכתוב "הסר" לא יקבל יותר הודעות.'}
+              </p>
+            </div>
+          </div>
         </Section>
 
         <Section title="פגישות" sub="המועדים ש-METATRON מציע למוכרים">
@@ -99,6 +112,70 @@ export function Settings({ state, onSaved }: { state: AppState; onSaved: () => v
   )
 }
 
+function Checkbox({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3 select-none">
+      <input type="checkbox" className="peer sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span className={cx('mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border-2 transition peer-focus-visible:ring-4 peer-focus-visible:ring-brand-100',
+        checked ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-300 bg-white')}>
+        {checked && <Check className="size-3.5" strokeWidth={3} />}
+      </span>
+      <span className="text-sm font-medium">{label}</span>
+    </label>
+  )
+}
+
+function ImagePicker({ image, onChange }: { image: string; onChange: (name: string) => void }) {
+  const input = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+  const toast = useToast()
+  const upload = async (file?: File) => {
+    if (!file) return
+    setBusy(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const r = await api<SettingsT>('/api/media/outreach', { method: 'POST', body: fd })
+      onChange(r.outreach_image)
+      toast('התמונה תצורף להודעות הראשונות מעכשיו')
+    } catch (e) { toast((e as Error).message, 'err') } finally {
+      setBusy(false)
+      if (input.current) input.current.value = ''
+    }
+  }
+  const remove = async () => {
+    const r = await api<SettingsT>('/api/media/outreach', { method: 'DELETE' })
+    onChange(r.outreach_image)
+    toast('ההודעות הראשונות יישלחו בלי תמונה')
+  }
+  return (
+    <div>
+      <div className="text-sm font-medium mb-1.5">תמונה עם ההודעה הראשונה (לא חובה)</div>
+      <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
+      {image ? (
+        <div className="flex items-center gap-3">
+          <img src={mediaUrl(image)} alt="" className="size-20 rounded-xl border border-line object-cover" />
+          <div className="flex flex-col gap-1.5">
+            <Button size="sm" variant="secondary" loading={busy} icon={<ImagePlus className="size-4" />} onClick={() => input.current?.click()}>החלפת תמונה</Button>
+            <Button size="sm" variant="ghost" icon={<Trash2 className="size-4" />} onClick={remove}>הסרת התמונה</Button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" disabled={busy} onClick={() => input.current?.click()}
+          onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); upload(e.dataTransfer.files[0]) }}
+          className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-line p-4 text-start text-sm text-muted transition hover:border-brand-400 hover:bg-brand-50/40">
+          <ImagePlus className="size-6 shrink-0 text-brand-600" />
+          {busy ? <span>מעלה…</span> : (
+            <span>גררו לכאן תמונה או לחצו לבחירה
+              <span className="block text-xs">לוגו, כרטיס ביקור או תמונה שלך. הטקסט יופיע ככיתוב מתחת לתמונה, בהודעה אחת.</span>
+            </span>
+          )}
+        </button>
+      )}
+    </div>
+  )
+}
+
 function Section({ title, sub, children }: { title: string; sub?: string; children: ReactNode }) {
   return (
     <Card className="grid gap-6 p-6 lg:grid-cols-[240px_1fr]">
@@ -110,12 +187,12 @@ function Section({ title, sub, children }: { title: string; sub?: string; childr
 
 const PLACEHOLDERS: [string, string][] = [['{שם}', 'שם פרטי'], ['{נכס}', 'הנכס והכתובת'], ['{עיר}', 'עיר'], ['{חתימה}', 'השם והמשרד']]
 
-function TemplateEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function TemplateEditor({ value, onChange, optOut, image }: { value: string; onChange: (v: string) => void; optOut: boolean; image: string }) {
   const [preview, setPreview] = useState<{ text: string; seller: string } | null>(null)
   useEffect(() => {
-    const t = setTimeout(() => api<{ text: string; seller: string }>('/api/template/preview', { method: 'POST', json: { body: value } }).then(setPreview).catch(() => {}), 300)
+    const t = setTimeout(() => api<{ text: string; seller: string }>('/api/template/preview', { method: 'POST', json: { body: value, include_opt_out: optOut } }).then(setPreview).catch(() => {}), 300)
     return () => clearTimeout(t)
-  }, [value])
+  }, [value, optOut])
   return (
     <div className="grid gap-4 xl:grid-cols-2">
       <div>
@@ -130,7 +207,10 @@ function TemplateEditor({ value, onChange }: { value: string; onChange: (v: stri
       </div>
       <div>
         <div className="text-xs text-muted mb-1.5">תצוגה מקדימה{preview?.seller ? ` · ${preview.seller}` : ''}</div>
-        <div className="whitespace-pre-wrap rounded-2xl rounded-tr-sm bg-[#d9fdd3] p-3.5 text-[15px] leading-relaxed shadow-sm">{preview?.text}</div>
+        <div className="rounded-2xl rounded-tr-sm bg-[#d9fdd3] p-1.5 shadow-sm">
+          {image && <img src={mediaUrl(image)} alt="" className="mb-1 max-h-64 w-full rounded-xl object-cover" />}
+          <div className="whitespace-pre-wrap p-2 text-[15px] leading-relaxed">{preview?.text}</div>
+        </div>
       </div>
     </div>
   )

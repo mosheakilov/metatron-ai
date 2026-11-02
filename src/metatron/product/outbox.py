@@ -101,8 +101,14 @@ class Outbox:
                 self.store.update_message(msg["id"], status="blocked", note="seller opted out")
                 return {**msg, "status": "blocked"}
             typing = min(12000, 1500 + 45 * len(msg["body"])) if msg["kind"] != "outreach" else 4000
+            image = None
+            if msg.get("media"):
+                image = self.settings.media_dir / msg["media"]
             try:
-                ext = self.gateway.send(msg["phone"], msg["body"], typing_ms=typing)
+                if image and not image.is_file():
+                    raise FileNotFoundError("התמונה של ההודעה לא נמצאה")
+                ext = self.gateway.send(msg["phone"], msg["body"], typing_ms=typing,
+                                        image=str(image) if image else None)
                 status, note = "sent", msg["note"]
             except Exception as e:  # stays visible in the dashboard; the broker can retry
                 ext, status, note = None, "failed", str(e)[:300]

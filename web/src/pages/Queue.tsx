@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Check, CheckCheck, Inbox, MapPin, MessageCircleQuestion, X } from 'lucide-react'
-import { api, fmtPhone, money, usePoll, type AppState, type Draft } from '../api'
+import { Check, CheckCheck, ImageOff, ImagePlus, Inbox, MapPin, MessageCircleQuestion, X } from 'lucide-react'
+import { api, fmtPhone, mediaUrl, money, usePoll, type AppState, type Draft } from '../api'
 import type { Page } from '../shell'
 import { Button, Card, Empty, PageHeader, Spinner, useToast } from '../ui'
 
@@ -26,6 +26,11 @@ export function Queue({ state, go }: { state: AppState; go: (p: Page) => void })
       reload()
     } catch (e) { toast((e as Error).message, 'err') } finally { setBusy(null) }
   }
+  const setMedia = async (d: Draft, attach: boolean) => {
+    try { await api(`/api/queue/${d.message_id}/media`, { method: 'POST', json: { attach } }); reload() }
+    catch (e) { toast((e as Error).message, 'err') }
+  }
+  const image = state.settings.outreach_image
   const approveAll = async () => {
     const unedited = drafts.filter((d) => edits[d.message_id] === undefined)
     setBusy('all')
@@ -73,11 +78,23 @@ export function Queue({ state, go }: { state: AppState; go: (p: Page) => void })
                 </div>
 
                 <div className="mt-4 flex-1 rounded-2xl rounded-tl-sm bg-[#e7ffdb] p-1">
+                  {d.media && (
+                    <div className="relative">
+                      <img src={mediaUrl(d.media)} alt="" className="max-h-56 w-full rounded-xl object-cover" />
+                      <button type="button" onClick={() => setMedia(d, false)}
+                        className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs text-white hover:bg-black/75">
+                        <ImageOff className="size-3.5" />בלי תמונה</button>
+                    </div>
+                  )}
                   <textarea value={body} onChange={(e) => setEdits({ ...edits, [d.message_id]: e.target.value })}
                     rows={Math.max(5, body.split('\n').length + 1)}
                     className="w-full resize-none bg-transparent p-3 text-[15px] leading-relaxed outline-none" />
                 </div>
-                {!body.includes(OPT_OUT) && <p className="mt-2 text-xs text-muted">שורת ההסרה תתווסף אוטומטית בשליחה.</p>}
+                {!d.media && image && d.kind === 'outreach' && (
+                  <button type="button" onClick={() => setMedia(d, true)} className="mt-2 inline-flex items-center gap-1 self-start text-xs text-brand-700 hover:underline">
+                    <ImagePlus className="size-3.5" />צירוף התמונה</button>
+                )}
+                {state.settings.include_opt_out && !body.includes(OPT_OUT) && <p className="mt-2 text-xs text-muted">שורת ההסרה תתווסף אוטומטית בשליחה.</p>}
                 {edits[d.message_id] !== undefined && <p className="mt-2 text-xs text-brand-700">ההודעה נערכה. הגרסה הערוכה היא שתישלח.</p>}
 
                 <div className="mt-4 flex gap-2">

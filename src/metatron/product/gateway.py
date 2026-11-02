@@ -39,9 +39,10 @@ class GatewayClient:
     def logout(self) -> dict:
         return self.client.post(f"{self.base}/logout").json()
 
-    def send(self, phone: str, text: str, typing_ms: int = 0) -> str | None:
-        r = self.client.post(f"{self.base}/send", json={"to": phone, "text": text,
-                                                        "typing_ms": typing_ms}, timeout=60)
+    def send(self, phone: str, text: str, typing_ms: int = 0, image: str | None = None) -> str | None:
+        """Send text, or a picture with the text as its caption (image = a local file path)."""
+        r = self.client.post(f"{self.base}/send", json={"to": phone, "text": text, "image": image,
+                                                        "typing_ms": typing_ms}, timeout=90)
         if r.status_code >= 400:
             raise RuntimeError(r.json().get("error", r.text))
         return r.json().get("id")

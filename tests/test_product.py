@@ -21,6 +21,7 @@ MON_11 = datetime(2026, 11, 2, 11, 0)  # a Monday inside working hours
 class FakeGateway:
     def __init__(self):
         self.sent: list[tuple[str, str]] = []
+        self.images: list[str | None] = []
         self.fail = False
 
     def status(self):
@@ -29,10 +30,11 @@ class FakeGateway:
     def connected(self):
         return True
 
-    def send(self, phone, text, typing_ms=0):
+    def send(self, phone, text, typing_ms=0, image=None):
         if self.fail:
             raise RuntimeError("number is not on WhatsApp")
         self.sent.append((phone, text))
+        self.images.append(image)
         return f"wa-{len(self.sent)}"
 
 
@@ -284,3 +286,90 @@ def test_installer_answers_prefill_settings_once(tmp_path):
     s = Settings(tmp_path)
     assert (s.data["broker_name"], s.data["wa_phone"]) == ("דנה", "050-1234567")
     assert not (tmp_path / "install.json").exists()
+
+
+# ---- opt-out line is the broker's choice ----------------------------------------------------
+OPT_OUT = 'להסרה השיבו "הסר".'
+
+
+def test_opt_out_line_can_be_turned_off(api, ctx):
+    assert api.put("/api/settings", json={"include_opt_out": False}).json()["include_opt_out"] is False
+    import_list(api)
+    api.post("/api/drafts", json={"seller_ids": ["c972501234567"]})
+    draft = api.get("/api/queue").json()["drafts"][0]
+    assert OPT_OUT not in draft["body"]
+    api.post(f"/api/queue/{draft['message_id']}/approve", json={"body": draft["body"] + " תודה"})
+    ctx.outbox.send_one(MON_11)
+    assert OPT_OUT not in ctx.gateway.sent[-1][1]  # not appended on approval either
+    # a seller who still writes "הסר" is blocked for good
+    assert inbound(api, ctx, "הסר") == "opt_out"
+    assert ctx.store.is_opted_out("0501234567")
+
+
+def test_opt_out_line_on_by_default_and_kept_on_edit(api, ctx):
+    approve_first(api, ctx)
+    ctx.outbox.send_one(MON_11)
+    assert ctx.gateway.sent[-1][1].endswith(OPT_OUT)
+
+
+def test_template_preview_follows_unsaved_checkbox(api):
+    on = api.post("/api/template/preview", json={"body": "היי {שם}"}).json()["text"]
+    off = api.post("/api/template/preview", json={"body": "היי {שם}",
+                                                  "include_opt_out": False}).json()["text"]
+    assert on.endswith(OPT_OUT) and OPT_OUT not in off
+
+
+# ---- a picture with the first message -------------------------------------------------------
+def png_bytes(color="red", size=(2400, 1200), mode="RGB"):
+    from PIL import Image
+
+    buf = io.BytesIO()
+    Image.new(mode, size, color).save(buf, "PNG")
+    return buf.getvalue()
+
+
+def test_first_message_goes_out_with_the_picture(api, ctx):
+    s = api.post("/api/media/outreach", files={"file": ("house.png", png_bytes())}).json()
+    name = s["outreach_image"]
+    assert name.endswith(".jpg")
+    img = api.get(f"/api/media/{name}")
+    assert img.status_code == 200 and img.headers["content-type"] == "image/jpeg"
+    from PIL import Image
+
+    assert max(Image.open(io.BytesIO(img.content)).size) == 1600  # resized for WhatsApp
+
+    draft = approve_first(api, ctx)
+    assert draft["media"] == name
+    ctx.outbox.send_one(MON_11)
+    assert ctx.gateway.images[-1] == str(ctx.settings.media_dir / name)
+    assert "דנה" in ctx.gateway.sent[-1][1]  # the text is the picture's caption
+
+
+def test_picture_can_be_dropped_from_one_draft_and_replaced_later(api, ctx):
+    first = api.post("/api/media/outreach", files={"file": ("a.png", png_bytes())}).json()
+    import_list(api)
+    api.post("/api/drafts", json={"seller_ids": ["c972501234567", "c972527654321"]})
+    a, b = api.get("/api/queue").json()["drafts"]
+    assert api.post(f"/api/queue/{a['message_id']}/media", json={"attach": False}).json() == {
+        "media": None}
+    # a new picture does not change drafts made with the old one
+    api.post("/api/media/outreach", files={"file": ("b.png", png_bytes("blue", mode="RGBA"))})
+    for d in (a, b):
+        api.post(f"/api/queue/{d['message_id']}/approve", json={})
+    ctx.outbox.send_one(MON_11)
+    ctx.outbox.send_one(MON_11 + timedelta(hours=1))
+    assert ctx.gateway.images == [None, str(ctx.settings.media_dir / first["outreach_image"])]
+
+
+def test_bad_uploads_and_media_names_are_refused(api):
+    assert api.post("/api/media/outreach", files={"file": ("x.png", b"not an image")}).status_code == 400
+    assert api.get("/api/media/settings.json").status_code == 404
+    assert api.delete("/api/media/outreach").json()["outreach_image"] == ""
+
+
+def test_missing_picture_fails_visibly(api, ctx):
+    name = api.post("/api/media/outreach", files={"file": ("a.png", png_bytes())}).json()[
+        "outreach_image"]
+    approve_first(api, ctx)
+    (ctx.settings.media_dir / name).unlink()
+    assert ctx.outbox.send_one(MON_11)["status"] == "failed" and not ctx.gateway.sent

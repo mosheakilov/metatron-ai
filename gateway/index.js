@@ -3,13 +3,14 @@
 // Runs on the broker's computer next to the Python app and listens on 127.0.0.1 only.
 //   GET  /status           connection state, own number, QR (data URL) while pairing
 //   POST /connect          {mode: "qr"} or {mode: "phone", phone} -> pairing code
-//   POST /send             {to, text, typing_ms} -> {id}
+//   POST /send             {to, text, image?, typing_ms} -> {id}  (image: a local JPEG path;
+//                          the text goes out as its caption, in one message)
 //   POST /logout
 // Every incoming 1:1 text message is forwarded to the app: POST $INBOUND_URL.
 // Groups, status updates, newsletters and history sync are ignored.
 
 import { createServer } from 'node:http'
-import { rm } from 'node:fs/promises'
+import { readFile, rm } from 'node:fs/promises'
 import makeWASocket, {
   Browsers, DisconnectReason, fetchLatestBaileysVersion, isJidGroup, isLidUser,
   jidNormalizedUser, useMultiFileAuthState,
@@ -79,7 +80,9 @@ async function start() {
   state.error = null
   sock = makeWASocket({
     auth, version, logger,
-    browser: Browsers.windows('METATRON'),
+    // Must be a browser WhatsApp knows: with an unknown name ("METATRON") the phone rejects the
+    // 8-character pairing code. Shown in the phone's linked devices as "Chrome (Windows)".
+    browser: Browsers.windows('Chrome'),
     markOnlineOnConnect: false, // the broker's phone keeps getting notifications
     syncFullHistory: false,
     emitOwnEvents: false, // our own sends are not echoed back as "typed on the phone"
@@ -111,6 +114,13 @@ async function start() {
         Object.assign(state, { status: 'logged_out', qr: null, pairingCode: null, me: null })
         return
       }
+      // Not linked yet and the code/QR ran out (WhatsApp closes after ~3 minutes): say so, so
+      // the dashboard offers a fresh code instead of showing a dead one.
+      if (code !== DisconnectReason.restartRequired && !auth.creds.registered) {
+        Object.assign(state, { status: 'expired', qr: null, pairingCode: null })
+        pairPhone = null
+        return
+      }
       // restartRequired comes right after pairing; anything else: back off and retry
       state.status = 'reconnecting'
       const wait = code === DisconnectReason.restartRequired ? 0 : Math.min(60000, 2000 * 2 ** retries++)
@@ -129,7 +139,7 @@ function fail(e) {
   logger.error({ err: String(e) }, 'gateway error')
 }
 
-async function send(to, text, typingMs) {
+async function send(to, text, typingMs, image) {
   if (!sock || state.status !== 'open') throw new Error('whatsapp is not connected')
   const jid = `${digits(to)}@s.whatsapp.net`
   const [found] = await sock.onWhatsApp(jid)
@@ -140,7 +150,10 @@ async function send(to, text, typingMs) {
     await sleep(Math.min(typingMs, 15000))
     await sock.sendPresenceUpdate('paused', found.jid).catch(() => {})
   }
-  const res = await sock.sendMessage(found.jid, { text })
+  const content = image
+    ? { image: await readFile(image), mimetype: 'image/jpeg', caption: text }
+    : { text }
+  const res = await sock.sendMessage(found.jid, content)
   return res?.key?.id || null
 }
 
@@ -172,8 +185,8 @@ createServer(async (req, res) => {
       return reply(res, 200, state)
     }
     if (req.method === 'POST' && req.url === '/send') {
-      const { to, text, typing_ms: typingMs = 0 } = await readJson(req)
-      return reply(res, 200, { id: await send(to, text, Number(typingMs)) })
+      const { to, text, image, typing_ms: typingMs = 0 } = await readJson(req)
+      return reply(res, 200, { id: await send(to, text, Number(typingMs), image || null) })
     }
     if (req.method === 'POST' && req.url === '/logout') {
       if (sock) await sock.logout().catch(() => {})

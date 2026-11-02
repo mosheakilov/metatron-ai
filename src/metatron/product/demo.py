@@ -41,7 +41,7 @@ class _DemoGateway:
     def connected(self):
         return True
 
-    def send(self, phone, text, typing_ms=0):
+    def send(self, phone, text, typing_ms=0, image=None):
         return f"demo-{random.randrange(10**9)}"
 
 

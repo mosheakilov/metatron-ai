@@ -16,6 +16,20 @@ SYSTEM = (
     "concrete detail of the listing. At most 3 short sentences plus the sign-off. "
     f'Always end with the exact line: {OPT_OUT_LINE}'
 )
+NO_OPT_OUT = ("Do not add any opt-out or unsubscribe line; the broker chose to send the message "
+              "without one.")
+
+
+def opt_out_enabled(cfg: Config | None) -> bool:
+    """The broker decides whether messages carry the opt-out line (default: yes).
+
+    "הסר" in a reply is honoured either way: the number is blocked for good.
+    """
+    return cfg is None or bool(cfg["outreach"].get("include_opt_out", True))
+
+
+def _system(cfg: Config) -> str:
+    return SYSTEM if opt_out_enabled(cfg) else SYSTEM.split("Always end with")[0] + NO_OPT_OUT
 
 
 def _signature(cfg: Config) -> str:
@@ -24,8 +38,10 @@ def _signature(cfg: Config) -> str:
     return f"{name}, {o['office_name']}" if name else o["office_name"]
 
 
-def _ensure_opt_out(text: str) -> str:
+def _ensure_opt_out(text: str, cfg: Config | None = None) -> str:
     text = text.strip()
+    if not opt_out_enabled(cfg):
+        return text
     return text if OPT_OUT_LINE in text else f"{text}\n{OPT_OUT_LINE}"
 
 
@@ -38,7 +54,7 @@ def render_template(template: str, seller: dict, cfg: Config) -> str:
     text = template
     for k, v in values.items():
         text = text.replace("{" + k + "}", str(v))
-    return _ensure_opt_out(text.replace("שלום ,", "שלום,").replace("  ", " "))
+    return _ensure_opt_out(text.replace("שלום ,", "שלום,").replace("  ", " "), cfg)
 
 
 def template_outreach(seller: dict, cfg: Config) -> str:
@@ -54,7 +70,7 @@ def template_outreach(seller: dict, cfg: Config) -> str:
         f"שלום {first}, כאן {_signature(cfg)}.\n"
         f"ראיתי את המודעה על {rooms_txt} ב{seller.get('address', '')}, {seller.get('city', '')}. "
         f"{hook}\n"
-        "אפשר לקבוע פגישה קצרה של חצי שעה בנכס?"
+        "אפשר לקבוע פגישה קצרה של חצי שעה בנכס?", cfg
     )
 
 
@@ -62,7 +78,7 @@ def template_answer(question: str, cfg: Config) -> str:
     return _ensure_opt_out(
         "שאלה טובה, תודה. את כל הפרטים (כולל תנאי העבודה והעמלה) אשמח לפרט בפגישה קצרה בנכס, "
         "בלי שום התחייבות. מתאים לך שאציע כמה מועדים?\n"
-        f"{_signature(cfg)}"
+        f"{_signature(cfg)}", cfg
     )
 
 
@@ -75,10 +91,10 @@ def draft_outreach(seller: dict, cfg: Config, llm=None) -> str:
     style = (f"The broker's own template (keep its intent and facts, personalise it, and never "
              f"claim you saw an ad unless the notes say so):\n{render_template(guide, seller, cfg)}\n"
              if guide else "")
-    prompt = (f"{SYSTEM}\n\nSeller facts: {facts}\nBroker notes: {seller.get('notes') or '-'}\n"
+    prompt = (f"{_system(cfg)}\n\nSeller facts: {facts}\nBroker notes: {seller.get('notes') or '-'}\n"
               f"{style}Sign the message as: {_signature(cfg)}\nReturn only the message text.")
     try:
-        return _ensure_opt_out(llm.call(messages=[{"role": "user", "content": prompt}]))
+        return _ensure_opt_out(llm.call(messages=[{"role": "user", "content": prompt}]), cfg)
     except Exception:
         return template_outreach(seller, cfg)
 
@@ -88,11 +104,11 @@ def draft_answer(question: str, history: list[dict], cfg: Config, llm=None) -> s
         return template_answer(question, cfg)
     convo = "\n".join(f"{'Seller' if m['direction'] == 'in' else 'Broker'}: {m['body']}"
                       for m in history[-8:])
-    prompt = (f"{SYSTEM}\n\nConversation so far:\n{convo}\n\nThe seller asked: {question}\n"
+    prompt = (f"{_system(cfg)}\n\nConversation so far:\n{convo}\n\nThe seller asked: {question}\n"
               "Answer briefly and honestly. If it is about commission or price, say the broker "
               "will explain at the meeting. Offer to propose meeting times.\n"
               f"Sign as: {_signature(cfg)}\nReturn only the message text.")
     try:
-        return _ensure_opt_out(llm.call(messages=[{"role": "user", "content": prompt}]))
+        return _ensure_opt_out(llm.call(messages=[{"role": "user", "content": prompt}]), cfg)
     except Exception:
         return template_answer(question, cfg)

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bot, CalendarCheck, Check, CheckCheck, Clock, Hand, MessagesSquare, Send, TriangleAlert } from 'lucide-react'
-import { api, fmtPhone, fmtSlot, fmtTime, usePoll, type AppState, type Meeting, type Message, type Seller } from '../api'
+import { api, fmtPhone, fmtSlot, fmtTime, mediaUrl, usePoll, type AppState, type Meeting, type Message, type Seller } from '../api'
 import { Button, Card, cx, Empty, Spinner, StatusBadge, useToast } from '../ui'
 
 type Convo = Seller & { last_body: string; last_direction: string; last_at: string; n_in: number }
@@ -94,6 +94,7 @@ function ThreadView({ id, state, onBack }: { id: string; state: AppState; onBack
             <div key={m.id} className={cx('flex', out ? 'justify-start' : 'justify-end')}>
               <div className={cx('max-w-[78%] rounded-2xl px-3.5 py-2 shadow-sm', out ? 'bg-[#d9fdd3] rounded-tr-sm' : 'bg-white rounded-tl-sm')}>
                 {out && KIND_HE[m.kind] && <div className="text-[11px] font-medium text-emerald-800/70 mb-0.5">{KIND_HE[m.kind]}</div>}
+                {m.media && <img src={mediaUrl(m.media)} alt="" className="mb-1.5 max-h-72 w-full rounded-xl object-cover" />}
                 <div className="whitespace-pre-wrap text-[15px] leading-relaxed">{m.body}</div>
                 <div className="mt-1 flex items-center justify-end gap-1 text-[11px] text-slate-500">
                   {fmtTime(m.sent_at || m.created_at)}

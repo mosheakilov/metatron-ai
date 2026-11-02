@@ -8,16 +8,18 @@ export type Seller = {
 export type Message = {
   id: number; seller_id: string; direction: 'in' | 'out'; kind: string; body: string
   status: string; note: string | null; created_at: string; sent_at: string | null; name?: string
+  media?: string | null
 }
-export type Draft = Seller & { message_id: number; kind: string; body: string }
+export type Draft = Seller & { message_id: number; kind: string; body: string; media: string | null }
 export type WhatsApp = {
-  status: 'offline' | 'disconnected' | 'connecting' | 'qr' | 'pairing' | 'open' | 'reconnecting' | 'logged_out' | 'error'
+  status: 'offline' | 'disconnected' | 'connecting' | 'qr' | 'pairing' | 'open' | 'reconnecting' | 'logged_out' | 'expired' | 'error'
   qr: string | null; pairingCode: string | null; me: { phone: string; name: string | null } | null
   error: string | null
 }
 export type Limits = { daily_new: number; start_hour: number; end_hour: number; min_gap_sec: number; max_gap_sec: number; send_on_weekend: boolean }
 export type SettingsT = {
   setup_done: boolean; broker_name: string; wa_phone: string; office_name: string; meeting_minutes: number; message_template: string
+  include_opt_out: boolean; outreach_image: string
   availability: { weekdays: number[]; hours: number[]; days_ahead: number }
   limits: Limits; paused: boolean; ai: { proxy_url: string; license_key: string }
 }
@@ -85,4 +87,5 @@ export function fmtSlot(iso: string) {
   const d = new Date(iso)
   return `יום ${DAY_NAMES[(d.getDay() + 6) % 7]} ${d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })} · ${d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`
 }
+export const mediaUrl = (name: string) => `/api/media/${name}`
 export const money = (n: number | null) => (n ? '₪' + n.toLocaleString('he-IL') : '')

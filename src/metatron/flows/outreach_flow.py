@@ -98,7 +98,8 @@ class OutreachFlow(Flow[OutreachState]):
         seller = self.store.seller(msg["seller_id"])
         body = self.state.edited_body.strip() if self.state.edited_body else msg["body"]
         if msg["kind"] in ("outreach", "answer"):
-            body = drafting._ensure_opt_out(body)  # the broker cannot remove the opt-out line
+            # with the opt-out line on, an edit cannot remove it; the broker can turn it off in settings
+            body = drafting._ensure_opt_out(body, self.cfg)
         res = get_channel(self.cfg, self.store).send(seller["phone"], body,
                                                      msg["kind"] == "outreach", seller)
         self.store.update_message(msg["id"], body=body, status=res.status,

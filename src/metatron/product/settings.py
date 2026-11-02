@@ -27,6 +27,13 @@ DEFAULTS: dict[str, Any] = {
                          "רציתי לבדוק אם {נכס} עדיין עומד למכירה. המשרד שלנו פעיל באזור, "
                          "ואשמח להכיר את הנכס.\n"
                          "אפשר לקבוע פגישה קצרה של חצי שעה?"),
+    # The broker decides whether messages end with 'להסרה השיבו "הסר".' A reply of "הסר" is
+    # honoured either way.
+    "include_opt_out": True,
+    # An optional picture sent with every first message (the text becomes its caption). The file
+    # lives in <home>/media; the name is a content hash, so drafts keep the picture they were
+    # approved with even after the broker replaces it.
+    "outreach_image": "",
     "availability": {"weekdays": [6, 0, 1, 2, 3], "hours": [10, 13, 17], "days_ahead": 7},
     # Pacing for first messages. A linked device is not the official API, so the product keeps
     # cold outreach slow and human-looking; conversation replies are not capped.
@@ -94,6 +101,12 @@ class Settings:
         self.data = _merge(self.data, changes)
         self.save()
 
+    @property
+    def media_dir(self) -> Path:
+        path = self.folder / "media"
+        path.mkdir(exist_ok=True)
+        return path
+
     def public(self) -> dict:
         """Settings the dashboard may see (no secret, license key masked)."""
         out = {k: copy.deepcopy(v) for k, v in self.data.items() if k != "secret"}
@@ -108,7 +121,8 @@ class Settings:
         cfg["outreach"].update(db_path=str(self.folder / "metatron.db"), channel="wa_web",
                                broker_name=d["broker_name"],
                                office_name=d["office_name"] or d["broker_name"],
-                               template=d["message_template"])
+                               template=d["message_template"],
+                               include_opt_out=d["include_opt_out"])
         cfg["calendar"]["slots"].update(weekdays=d["availability"]["weekdays"],
                                         hours=d["availability"]["hours"],
                                         days_ahead=d["availability"]["days_ahead"],
