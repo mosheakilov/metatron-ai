@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { AlertTriangle, CheckCircle2, FileSpreadsheet, UploadCloud } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ClipboardPaste, FileSpreadsheet, UploadCloud } from 'lucide-react'
 import { api, fmtPhone, money } from '../api'
 import { Button, Card, cx, Spinner } from '../ui'
 
@@ -19,6 +19,8 @@ export function ImportWizard({ onDone }: { onDone: (r: { saved: number; new: num
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [drag, setDrag] = useState(false)
+  const [source, setSource] = useState<'file' | 'text'>('file')
+  const [text, setText] = useState('')
   const input = useRef<HTMLInputElement>(null)
 
   const upload = async (file: File) => {
@@ -43,9 +45,35 @@ export function ImportWizard({ onDone }: { onDone: (r: { saved: number; new: num
     catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
   }
 
+  const fromText = async () => {
+    setBusy(true); setErr(null)
+    try { setPre(await api<Preview>('/api/contacts/paste', { method: 'POST', json: { body: text } })) }
+    catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
+  }
+
   if (!pre) {
     return (
       <div>
+        <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
+          {([['file', 'קובץ Excel או CSV', FileSpreadsheet], ['text', 'הדבקת טקסט', ClipboardPaste]] as const).map(([m, label, Icon]) => (
+            <button key={m} type="button" onClick={() => { setSource(m); setErr(null) }}
+              className={cx('flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition', source === m ? 'bg-white shadow-sm' : 'text-muted')}>
+              <Icon className="size-4" />{label}
+            </button>
+          ))}
+        </div>
+        {source === 'text' ? (
+          <div>
+            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={9} autoFocus
+              placeholder={'לקוח בכל שורה, לדוגמה:\nיעל כהן 050-1234567 חיפה, הנשיא 10\nרון לוי 052-7654321\n\nאפשר גם להדביק תאים שהועתקו מ-Excel או מ-Google Sheets.'}
+              className="w-full resize-y rounded-xl border border-line p-3.5 text-[15px] leading-relaxed outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100" />
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <span className="text-xs text-muted">המספר יכול להופיע בכל מקום בשורה. מה שלפניו הוא השם, ומה שאחריו נשמר כהערה.</span>
+              <Button loading={busy} disabled={!text.trim()} onClick={fromText}>המשך לבדיקה</Button>
+            </div>
+            {err && <div className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{err}</div>}
+          </div>
+        ) : <>
         <button type="button" onClick={() => input.current?.click()}
           onDragOver={(e) => { e.preventDefault(); setDrag(true) }} onDragLeave={() => setDrag(false)}
           onDrop={(e) => { e.preventDefault(); setDrag(false); const f = e.dataTransfer.files[0]; if (f) upload(f) }}
@@ -56,6 +84,7 @@ export function ImportWizard({ onDone }: { onDone: (r: { saved: number; new: num
         </button>
         <input ref={input} type="file" accept=".xlsx,.xlsm,.csv,.txt" hidden onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
         {err && <div className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{err}</div>}
+        </>}
       </div>
     )
   }
@@ -66,7 +95,7 @@ export function ImportWizard({ onDone }: { onDone: (r: { saved: number; new: num
         <FileSpreadsheet className="size-5 text-emerald-600" />
         <span className="font-medium">{pre.filename}</span>
         <span className="text-sm text-muted">· <span className="num">{pre.n_rows}</span> שורות</span>
-        <button className="mr-auto text-sm text-brand-700 hover:underline" onClick={() => setPre(null)}>קובץ אחר</button>
+        <button className="mr-auto text-sm text-brand-700 hover:underline" onClick={() => setPre(null)}>{source === 'text' ? 'עריכת הטקסט' : 'קובץ אחר'}</button>
       </div>
 
       <div>

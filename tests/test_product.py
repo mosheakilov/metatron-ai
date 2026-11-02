@@ -373,3 +373,39 @@ def test_missing_picture_fails_visibly(api, ctx):
     approve_first(api, ctx)
     (ctx.settings.media_dir / name).unlink()
     assert ctx.outbox.send_one(MON_11)["status"] == "failed" and not ctx.gateway.sent
+
+
+# ---- clients pasted as text -----------------------------------------------------------------
+def paste(api, text):
+    pre = api.post("/api/contacts/paste", json={"body": text}).json()
+    return pre, {c["phone"]: c for c in pre["preview"]}
+
+
+def test_paste_free_lines(api):
+    pre, got = paste(api, "יעל כהן 050-1234567 חיפה, הנשיא 10\n"
+                          "רון לוי - +972 52 765 4321\n"
+                          "מיכל\n0541112233\n"
+                          "סתם שורה בלי טלפון בסוף")
+    assert pre["ok"] and pre["valid"] == 3
+    assert got["972501234567"]["name"] == "יעל כהן"
+    assert got["972501234567"]["notes"] == "חיפה, הנשיא 10"
+    assert got["972527654321"]["name"] == "רון לוי"
+    assert got["972541112233"]["name"] == "מיכל"  # name line, then phone line
+
+
+def test_paste_from_excel_with_and_without_header(api):
+    pre, got = paste(api, "שם\tנייד\tעיר\nיעל כהן\t050-1234567\tחיפה\n")
+    assert got["972501234567"]["city"] == "חיפה"
+    pre, got = paste(api, "יעל כהן\t050-1234567\tחיפה\nרון\t0527654321\tטירה\n")
+    assert pre["headers"][:2] == ["שם", "טלפון"] and pre["valid"] == 2
+
+
+def test_paste_csv_with_header_and_import(api, ctx):
+    pre, _ = paste(api, "name,phone,city\nYael,0501234567,Haifa\n")
+    res = api.post("/api/contacts/import", json={"token": pre["token"], "mapping": pre["mapping"]})
+    assert res.json()["saved"] == 1 and ctx.store.seller("c972501234567")["city"] == "Haifa"
+
+
+def test_paste_without_phones_is_explained(api):
+    r = api.post("/api/contacts/paste", json={"body": "רק שמות\nבלי מספרים"})
+    assert r.status_code == 400 and "טלפון" in r.json()["detail"]

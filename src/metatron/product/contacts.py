@@ -64,6 +64,66 @@ def read_rows(filename: str, content: bytes) -> tuple[list[str], list[list[str]]
     return [str(h).strip() for h in table[0]], [[str(c).strip() for c in r] for r in table[1:]]
 
 
+PHONE_IN_TEXT = re.compile(r"(?<![\d+])(?:\+?972[\s\-]?|0)5\d(?:[\s\-]?\d){7}(?!\d)")
+
+
+def read_pasted(text: str) -> tuple[list[str], list[list[str]]]:
+    """Clients pasted as text. Three shapes are understood:
+
+    - cells copied from Excel / Google Sheets (tab-separated), with or without a header row;
+    - CSV with a header row (name and phone columns);
+    - free lines, one client per line, e.g. "יעל כהן 050-1234567 חיפה, הנשיא 10": the phone is
+      found anywhere in the line, the text before it is the name and the rest becomes a note.
+      A name on its own line followed by a phone on the next line is joined.
+    """
+    lines = [ln.strip() for ln in text.replace("\r\n", "\n").split("\n") if ln.strip()]
+    if not lines:
+        raise ValueError("לא הודבק טקסט")
+    if any("\t" in ln for ln in lines):
+        return _table([ln.split("\t") for ln in lines])
+    if "," in lines[0] and _has_header(next(csv.reader([lines[0]]))):
+        return _table(list(csv.reader(lines)))
+
+    rows, pending = [], ""
+    for ln in lines:
+        m = PHONE_IN_TEXT.search(ln)
+        if not m:
+            pending = f"{pending} {ln}".strip() if pending else ln
+            continue
+        before = ln[:m.start()].strip(" \t,;:-–|")
+        after = ln[m.end():].strip(" \t,;:-–|")
+        name = before or pending
+        rows.append([name, m.group(), after])
+        pending = ""
+    if not rows:
+        raise ValueError("לא נמצאו מספרי טלפון בטקסט")
+    return ["שם", "טלפון", "הערות"], rows
+
+
+def _has_header(cells: list[str]) -> bool:
+    m = guess_mapping(cells)
+    return m["name"] is not None and m["phone"] is not None and not any(
+        PHONE_IN_TEXT.search(c) for c in cells)
+
+
+def _table(table: list[list[str]]) -> tuple[list[str], list[list[str]]]:
+    width = max(len(r) for r in table)
+    table = [[c.strip() for c in r] + [""] * (width - len(r)) for r in table]
+    if _has_header(table[0]):
+        return table[0], table[1:]
+    # no header row: name the columns by what they hold, the broker can fix it on screen
+    def phones(i):
+        return sum(bool(PHONE_IN_TEXT.fullmatch(r[i].replace(" ", ""))) for r in table)
+    phone_col = max(range(width), key=phones)
+    headers = [f"עמודה {i + 1}" for i in range(width)]
+    headers[phone_col] = "טלפון"
+    name_col = next((i for i in range(width) if i != phone_col and any(
+        re.search(r"[^\W\d_]", r[i]) for r in table)), None)
+    if name_col is not None:
+        headers[name_col] = "שם"
+    return headers, table
+
+
 def _cell(v) -> str:
     if isinstance(v, float) and v.is_integer():
         return str(int(v))

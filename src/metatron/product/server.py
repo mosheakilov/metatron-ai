@@ -194,11 +194,22 @@ def create_app(ctx: Ctx) -> FastAPI:
             headers, rows = contacts.read_rows(file.filename or "", await file.read())
         except ValueError as e:
             raise HTTPException(400, str(e)) from e
+        return _preview(file.filename or "", headers, rows)
+
+    @app.post("/api/contacts/paste")
+    def contacts_paste(body: SendIn):
+        try:
+            headers, rows = contacts.read_pasted(body.body)
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+        return _preview("טקסט מודבק", headers, rows)
+
+    def _preview(filename: str, headers: list[str], rows: list[list[str]]) -> dict:
         token = secrets.token_urlsafe(8)
-        ctx.uploads[token] = {"name": file.filename, "headers": headers, "rows": rows}
+        ctx.uploads[token] = {"name": filename, "headers": headers, "rows": rows}
         mapping = contacts.guess_mapping(headers)
         prep = contacts.prepare(headers, rows, mapping, store)
-        return {"token": token, "filename": file.filename, "headers": headers,
+        return {"token": token, "filename": filename, "headers": headers,
                 "sample": rows[:5], "n_rows": len(rows), "mapping": mapping,
                 "fields": list(contacts.FIELDS), "required": list(contacts.REQUIRED),
                 **_summary(prep)}
