@@ -10,7 +10,9 @@ import yaml
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CONFIG = ROOT / "config.yaml"
+# The repo's config.yaml; the installed product ships a copy inside the package.
+DEFAULT_CONFIG = ROOT / "config.yaml" if (ROOT / "config.yaml").exists() \
+    else Path(__file__).resolve().parent / "config.yaml"
 
 
 class Config(dict):

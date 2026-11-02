@@ -99,6 +99,28 @@ class WhatsAppChannel:
             return SendResult("failed", note=str(e)[:300])
 
 
+class QueueChannel:
+    """Product channel (linked WhatsApp device): messages wait in the outbox, which sends them
+    with human pacing and daily limits (metatron.product.outbox)."""
+
+    name = "wa_web"
+
+    def __init__(self, cfg: Config, store: Store):
+        self.cfg, self.store = cfg, store
+
+    def send(self, phone: str, body: str, first_contact: bool = False,
+             seller: dict | None = None) -> SendResult:
+        if self.store.is_opted_out(phone):
+            return SendResult("blocked", note="opted out")
+        if not normalize_phone(phone):
+            return SendResult("failed", note="no phone number")
+        return SendResult("queued")
+
+
 def get_channel(cfg: Config, store: Store):
-    return WhatsAppChannel(cfg, store) if cfg["outreach"]["channel"] == "whatsapp" \
-        else SimulationChannel(cfg, store)
+    channel = cfg["outreach"]["channel"]
+    if channel == "whatsapp":
+        return WhatsAppChannel(cfg, store)
+    if channel == "wa_web":
+        return QueueChannel(cfg, store)
+    return SimulationChannel(cfg, store)

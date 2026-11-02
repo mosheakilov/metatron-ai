@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+import threading
 from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
@@ -67,46 +68,63 @@ class Store:
             self.path.parent.mkdir(parents=True, exist_ok=True)
         self.db = sqlite3.connect(str(path), check_same_thread=False)
         self.db.row_factory = sqlite3.Row
+        self.lock = threading.RLock()  # the product's API threads and outbox share one connection
         self.db.executescript(SCHEMA)
+        self._migrate()
+
+    def _migrate(self) -> None:
+        """Columns added after the first release; old databases get them in place."""
+        for table, col, ddl in [("sellers", "phone_norm", "TEXT"), ("sellers", "notes", "TEXT"),
+                                ("messages", "sent_at", "TEXT")]:
+            if col not in {r["name"] for r in self.q(f"PRAGMA table_info({table})")}:
+                self.db.execute(f"ALTER TABLE {table} ADD COLUMN {col} {ddl}")
+        for r in self.q("SELECT seller_id, phone FROM sellers WHERE phone_norm IS NULL"):
+            self.db.execute("UPDATE sellers SET phone_norm=? WHERE seller_id=?",
+                            (normalize_phone(r["phone"]), r["seller_id"]))
+        self.db.execute("CREATE INDEX IF NOT EXISTS sellers_phone ON sellers(phone_norm)")
+        self.db.commit()
 
     # ---- generic ---------------------------------------------------------------------
     def q(self, sql: str, args: Iterable[Any] = ()) -> list[dict]:
-        return [dict(r) for r in self.db.execute(sql, tuple(args)).fetchall()]
+        with self.lock:
+            return [dict(r) for r in self.db.execute(sql, tuple(args)).fetchall()]
 
     def one(self, sql: str, args: Iterable[Any] = ()) -> dict | None:
         rows = self.q(sql, args)
         return rows[0] if rows else None
 
     def x(self, sql: str, args: Iterable[Any] = ()) -> int:
-        cur = self.db.execute(sql, tuple(args))
-        self.db.commit()
-        return cur.lastrowid
+        with self.lock:
+            cur = self.db.execute(sql, tuple(args))
+            self.db.commit()
+            return cur.lastrowid
 
     def log(self, seller_id: str | None, event: str, detail: str = "") -> None:
         self.x("INSERT INTO events(seller_id, event, detail, created_at) VALUES (?,?,?,?)",
                (seller_id, event, detail, now()))
 
     # ---- sellers ---------------------------------------------------------------------
-    def upsert_sellers(self, rows: list[dict]) -> None:
+    def upsert_sellers(self, rows: list[dict], status: str = "scored") -> None:
+        """Insert or refresh sellers. The status of an existing seller is never reset."""
         cols = ["seller_id", "name", "phone", "city", "address", "rooms", "area_sqm",
                 "asking_price", "days_on_market", "price_drops", "score", "rank",
-                "model_version", "run_id"]
+                "model_version", "run_id", "notes", "phone_norm"]
         sql = (f"INSERT INTO sellers({','.join(cols)}, status, updated_at) "
-               f"VALUES ({','.join('?' * len(cols))}, 'scored', ?) "
+               f"VALUES ({','.join('?' * len(cols))}, ?, ?) "
                "ON CONFLICT(seller_id) DO UPDATE SET "
                + ", ".join(f"{c}=excluded.{c}" for c in cols[1:]) + ", updated_at=excluded.updated_at")
-        self.db.executemany(sql, [tuple(r.get(c) for c in cols) + (now(),) for r in rows])
-        self.db.commit()
+        rows = [{**r, "phone_norm": normalize_phone(r.get("phone") or "")} for r in rows]
+        with self.lock:
+            self.db.executemany(sql, [tuple(r.get(c) for c in cols) + (status, now()) for r in rows])
+            self.db.commit()
 
     def seller(self, seller_id: str) -> dict | None:
         return self.one("SELECT * FROM sellers WHERE seller_id=?", (seller_id,))
 
     def seller_by_phone(self, phone: str) -> dict | None:
-        target = normalize_phone(phone)
-        for s in self.q("SELECT * FROM sellers WHERE status NOT IN ('scored') ORDER BY updated_at DESC"):
-            if normalize_phone(s["phone"]) == target:
-                return s
-        return None
+        """A seller we have contacted (not one that was only scored or imported)."""
+        return self.one("SELECT * FROM sellers WHERE phone_norm=? AND status NOT IN ('scored', 'new')"
+                        " ORDER BY updated_at DESC LIMIT 1", (normalize_phone(phone),))
 
     def set_status(self, seller_id: str, status: str) -> None:
         self.x("UPDATE sellers SET status=?, updated_at=? WHERE seller_id=?",
@@ -114,8 +132,8 @@ class Store:
         self.log(seller_id, "status", status)
 
     def set_phone(self, seller_id: str, phone: str) -> None:
-        self.x("UPDATE sellers SET phone=?, updated_at=? WHERE seller_id=?",
-               (phone, now(), seller_id))
+        self.x("UPDATE sellers SET phone=?, phone_norm=?, updated_at=? WHERE seller_id=?",
+               (phone, normalize_phone(phone), now(), seller_id))
 
     def sellers(self, status: str | None = None, limit: int = 500) -> list[dict]:
         if status:

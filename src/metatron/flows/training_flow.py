@@ -31,6 +31,7 @@ class TrainingState(BaseModel):
 
 class TrainingFlow(Flow[TrainingState]):
     cfg: Config = Field(default_factory=load_config, exclude=True)
+    _skip_auto_memory: bool = True  # crews pass artifacts through the run folder, not memory
 
     def _run(self) -> Run:
         return Run(self.cfg, Path(self.state.run_dir))

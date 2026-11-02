@@ -29,7 +29,21 @@ def _ensure_opt_out(text: str) -> str:
     return text if OPT_OUT_LINE in text else f"{text}\n{OPT_OUT_LINE}"
 
 
+def render_template(template: str, seller: dict, cfg: Config) -> str:
+    """The broker's own opening message. Placeholders: {שם} {חתימה} {נכס} {עיר}."""
+    first = (seller.get("name") or "").split(" ")[0]
+    place = ", ".join(x for x in (seller.get("address"), seller.get("city")) if x)
+    values = {"שם": first, "חתימה": _signature(cfg), "עיר": seller.get("city") or "",
+              "נכס": f"הנכס ב{place}" if place else "הנכס שלך"}
+    text = template
+    for k, v in values.items():
+        text = text.replace("{" + k + "}", str(v))
+    return _ensure_opt_out(text.replace("שלום ,", "שלום,").replace("  ", " "))
+
+
 def template_outreach(seller: dict, cfg: Config) -> str:
+    if cfg["outreach"].get("template"):
+        return render_template(cfg["outreach"]["template"], seller, cfg)
     first = (seller.get("name") or "").split(" ")[0]
     rooms = seller.get("rooms")
     rooms_txt = f"{rooms:g} חדרים" if isinstance(rooms, int | float) else "הדירה"
@@ -57,8 +71,12 @@ def draft_outreach(seller: dict, cfg: Config, llm=None) -> str:
         return template_outreach(seller, cfg)
     facts = {k: seller.get(k) for k in ("name", "city", "address", "rooms", "asking_price",
                                          "days_on_market", "price_drops")}
-    prompt = (f"{SYSTEM}\n\nSeller listing facts: {facts}\n"
-              f"Sign the message as: {_signature(cfg)}\nReturn only the message text.")
+    guide = cfg["outreach"].get("template")
+    style = (f"The broker's own template (keep its intent and facts, personalise it, and never "
+             f"claim you saw an ad unless the notes say so):\n{render_template(guide, seller, cfg)}\n"
+             if guide else "")
+    prompt = (f"{SYSTEM}\n\nSeller facts: {facts}\nBroker notes: {seller.get('notes') or '-'}\n"
+              f"{style}Sign the message as: {_signature(cfg)}\nReturn only the message text.")
     try:
         return _ensure_opt_out(llm.call(messages=[{"role": "user", "content": prompt}]))
     except Exception:

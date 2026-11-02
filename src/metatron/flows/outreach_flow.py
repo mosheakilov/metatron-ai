@@ -36,6 +36,7 @@ class OutreachState(BaseModel):
     message_id: int | None = None    # for approve / reject
     edited_body: str | None = None   # broker's edit before approving
     text: str = ""                   # inbound reply text
+    external_id: str | None = None   # inbound WhatsApp message id (dedupe)
     result: str = ""                 # what happened, for the UI / tests
     label: str | None = None
 
@@ -45,6 +46,8 @@ class OutreachFlow(Flow[OutreachState]):
     store: Store | None = Field(default=None, exclude=True)
 
     model_config = {"arbitrary_types_allowed": True}
+    # Each run is one event; state lives in SQLite, so CrewAI's vector memory is not needed.
+    _skip_auto_memory: bool = True
 
     def _llm(self, tier: str):
         return get_llm(self.cfg, tier) if use_llm(self.cfg) else None
@@ -103,7 +106,7 @@ class OutreachFlow(Flow[OutreachState]):
                                   external_id=res.external_id,
                                   note=("edited by broker; " if self.state.edited_body else "")
                                   + (res.note or ""))
-        if res.status == "sent":
+        if res.status in ("sent", "queued"):  # queued: the product's outbox sends it soon
             self.store.set_status(seller["seller_id"], "sent" if msg["kind"] == "outreach"
                                   else "in_conversation")
         elif res.status == "blocked" and res.note == "opted out":
@@ -122,7 +125,8 @@ class OutreachFlow(Flow[OutreachState]):
     @listen("reply")
     def store_reply(self):
         seller = self._seller()
-        self.store.add_message(seller["seller_id"], "in", "reply", self.state.text, "received")
+        self.store.add_message(seller["seller_id"], "in", "reply", self.state.text, "received",
+                               external_id=self.state.external_id)
 
     @router(store_reply)
     def handle_reply(self):
