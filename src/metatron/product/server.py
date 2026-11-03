@@ -22,7 +22,7 @@ from metatron.flows.outreach_flow import run_event
 from metatron.llm import use_llm
 from metatron.outreach.store import Store
 from metatron.product import contacts
-from metatron.product.gateway import GatewayClient, handle_inbound
+from metatron.product.gateway import GatewayClient, cancel_pending_outreach, handle_inbound
 from metatron.product.outbox import Outbox
 from metatron.product.settings import Settings
 
@@ -356,6 +356,19 @@ def create_app(ctx: Ctx) -> FastAPI:
                 "failed": store.q("SELECT m.*, s.name, s.phone FROM messages m JOIN sellers s "
                                   "USING(seller_id) WHERE m.status='failed' ORDER BY m.id DESC")}
 
+    @app.post("/api/outbox/{message_id}/send-now")
+    def send_now(message_id: int):
+        if not ctx.gateway.connected():
+            raise HTTPException(400, "הוואטסאפ לא מחובר, ההודעה תחכה בתור עד החיבור")
+        sent = ctx.outbox.send_now(message_id)
+        if not sent:
+            raise HTTPException(404, "ההודעה כבר לא בתור")
+        if sent["status"] == "failed":
+            raise HTTPException(502, f"השליחה נכשלה: {sent['note']}")
+        if sent["status"] == "blocked":
+            raise HTTPException(400, "המוכר ביקש להסיר, ההודעה לא נשלחה")
+        return {"status": sent["status"]}
+
     @app.post("/api/outbox/{message_id}/retry")
     def retry(message_id: int):
         ctx.outbox.retry(message_id)
@@ -392,6 +405,7 @@ def create_app(ctx: Ctx) -> FastAPI:
             raise HTTPException(400, "הודעה ראשונה יוצאת רק דרך תור האישור")
         mid = store.add_message(seller_id, "out", "manual", body.body.strip(), "queued",
                                 channel="wa_web", note="written in the dashboard")
+        cancel_pending_outreach(store, seller_id)
         store.set_status(seller_id, "broker_took_over")
         return {"message_id": mid}
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bot, CalendarCheck, Check, CheckCheck, Clock, Hand, MessagesSquare, Send, TriangleAlert } from 'lucide-react'
-import { api, fmtPhone, fmtSlot, fmtTime, mediaUrl, usePoll, type AppState, type Meeting, type Message, type Seller } from '../api'
+import { Ban, Bot, CalendarCheck, Check, CheckCheck, Clock, Hand, MessagesSquare, Send, TriangleAlert, Zap } from 'lucide-react'
+import { api, fmtPhone, fmtSlot, fmtTime, mediaUrl, queuedNote, sendNow, usePoll, type AppState, type Meeting, type Message, type Seller } from '../api'
 import { Button, Card, cx, Empty, Spinner, StatusBadge, useToast } from '../ui'
 
 type Convo = Seller & { last_body: string; last_direction: string; last_at: string; n_in: number }
@@ -62,6 +62,11 @@ function ThreadView({ id, state, onBack }: { id: string; state: AppState; onBack
     try { await api(`/api/conversations/${id}/send`, { method: 'POST', json: { body: text } }); setText(''); reload() }
     catch (e) { toast((e as Error).message, 'err') } finally { setBusy(false) }
   }
+  const now = async (mid: number) => {
+    setBusy(true)
+    try { await sendNow(mid); toast('ההודעה נשלחה'); reload() }
+    catch (e) { toast((e as Error).message, 'err') } finally { setBusy(false) }
+  }
   const resume = async () => { await api(`/api/conversations/${id}/automation`, { method: 'POST' }); reload(); toast('METATRON חוזר לטפל בשיחה') }
 
   return (
@@ -90,6 +95,13 @@ function ThreadView({ id, state, onBack }: { id: string; state: AppState; onBack
       <div className="flex-1 overflow-y-auto scroll-thin bg-[#efeae2] px-4 py-5 space-y-2">
         {data.messages.filter((m) => m.status !== 'draft' && m.status !== 'rejected').map((m) => {
           const out = m.direction === 'out'
+          if (m.status === 'cancelled') {
+            return (
+              <div key={m.id} className="flex justify-center">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1 text-xs text-muted"><Ban className="size-3.5" />{KIND_HE[m.kind] || 'הודעה'} בוטלה: {m.note || 'לא נשלחה'}</span>
+              </div>
+            )
+          }
           return (
             <div key={m.id} className={cx('flex', out ? 'justify-start' : 'justify-end')}>
               <div className={cx('max-w-[78%] rounded-2xl px-3.5 py-2 shadow-sm', out ? 'bg-[#d9fdd3] rounded-tr-sm' : 'bg-white rounded-tl-sm')}>
@@ -100,6 +112,15 @@ function ThreadView({ id, state, onBack }: { id: string; state: AppState; onBack
                   {fmtTime(m.sent_at || m.created_at)}
                   {out && <Tick status={m.status} note={m.note} />}
                 </div>
+                {m.status === 'queued' && (
+                  <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-emerald-900/10 pt-1.5 text-xs text-emerald-900/80">
+                    <span className="inline-flex items-center gap-1"><Clock className="size-3.5" />{queuedNote(m, state.outbox, state.whatsapp.status === 'open')}</span>
+                    {state.whatsapp.status === 'open' && (
+                      <button type="button" disabled={busy} onClick={() => now(m.id)} className="inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2.5 py-0.5 font-medium text-white hover:bg-emerald-800 disabled:opacity-50">
+                        <Zap className="size-3.5" />שליחה עכשיו</button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )

@@ -87,5 +87,20 @@ export function fmtSlot(iso: string) {
   const d = new Date(iso)
   return `יום ${DAY_NAMES[(d.getDay() + 6) % 7]} ${d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })} · ${d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`
 }
+export const WAIT_HE: Record<string, string> = {
+  empty: 'אין הודעות בתור', paused: 'השליחה מושהית', daily_cap: 'הגעת למכסה היומית',
+  outside_hours: 'מחוץ לשעות השליחה', pacing: 'ממתין בין הודעות',
+}
+/** Why a queued message has not gone out yet, in words. */
+export function queuedNote(m: Message, ob: OutboxT, connected: boolean) {
+  if (!connected) return 'ממתינה לחיבור הוואטסאפ'
+  if (ob.paused) return 'השליחה מושהית'
+  if (m.kind !== 'outreach') return 'נשלחת עכשיו…'
+  const when = ob.next_at ? ` · תצא ב-${fmtTime(ob.next_at)}` : ''
+  return (WAIT_HE[ob.waiting || ''] || 'ממתינה בתור') + when
+}
+export async function sendNow(id: number) {
+  return api<{ status: string }>(`/api/outbox/${id}/send-now`, { method: 'POST' })
+}
 export const mediaUrl = (name: string) => `/api/media/${name}`
 export const money = (n: number | null) => (n ? '₪' + n.toLocaleString('he-IL') : '')

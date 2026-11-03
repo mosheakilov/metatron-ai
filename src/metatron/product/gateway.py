@@ -48,6 +48,16 @@ class GatewayClient:
         return r.json().get("id")
 
 
+def cancel_pending_outreach(store: Store, seller_id: str) -> int:
+    """The broker already talks to this seller, so the opening message waiting to go out (or
+    waiting for approval) would arrive out of order: cancel it."""
+    pending = store.q("SELECT id FROM messages WHERE seller_id=? AND kind='outreach' AND "
+                      "status IN ('queued', 'draft')", (seller_id,))
+    for m in pending:
+        store.update_message(m["id"], status="cancelled", note="השיחה כבר התחילה")
+    return len(pending)
+
+
 ACTIVE = ("sent", "in_conversation", "slots_offered", "awaiting_approval", "booked",
           "not_interested", "broker_took_over")
 
@@ -79,6 +89,7 @@ def handle_inbound(store: Store, cfg: Config, msg: dict) -> str:
         # The broker typed in WhatsApp themself: show it, and stop automatic replies for them.
         store.add_message(sid, "out", "manual", text, "sent", channel="wa_web", external_id=ext,
                           note="sent from the phone")
+        cancel_pending_outreach(store, sid)
         if seller["status"] not in ("opted_out", "booked"):
             store.set_status(sid, "broker_took_over")
         return "manual"

@@ -1,12 +1,8 @@
-import { ArrowDownLeft, ArrowUpLeft, CalendarCheck, Clock, Inbox, MessageCircle, Send, Users, WifiOff } from 'lucide-react'
-import { fmtSlot, fmtTime, usePoll, type AppState, type Stats } from '../api'
+import { useState } from 'react'
+import { ArrowDownLeft, ArrowUpLeft, CalendarCheck, Clock, Inbox, MessageCircle, Send, Users, WifiOff, Zap } from 'lucide-react'
+import { fmtSlot, fmtTime, sendNow, usePoll, WAIT_HE, type AppState, type Message, type Stats } from '../api'
 import type { Page } from '../shell'
-import { Button, Card, cx, Empty, Spinner } from '../ui'
-
-const WAIT_HE: Record<string, string> = {
-  empty: 'אין הודעות בתור', paused: 'השליחה מושהית', daily_cap: 'הגעת למכסה היומית',
-  outside_hours: 'מחוץ לשעות השליחה', pacing: 'ממתין בין הודעות',
-}
+import { Button, Card, cx, Empty, Spinner, useToast } from '../ui'
 
 export function Home({ state, go }: { state: AppState; go: (p: Page) => void }) {
   const { data: st } = usePoll<Stats>('/api/stats', 5000)
@@ -75,6 +71,7 @@ export function Home({ state, go }: { state: AppState; go: (p: Page) => void }) 
             <Row label="מצב" value={ob.queued ? WAIT_HE[ob.waiting || ''] || 'שולח…' : 'הכל נשלח'} />
             {ob.next_at && ob.waiting !== 'empty' && <Row label="השליחה הבאה" value={<span className="num">{fmtTime(ob.next_at)}</span>} />}
           </div>
+          {ob.queued > 0 && <QueuedList connected={state.whatsapp.status === 'open'} />}
         </Card>
       </div>
 
@@ -130,6 +127,33 @@ function Kpi({ icon, label, n, tone, sub }: { icon: React.ReactNode; label: stri
       <div className="num text-3xl font-bold mt-4">{n.toLocaleString('he-IL')}</div>
       <div className="text-sm text-muted mt-0.5">{label}{sub && <span className="text-slate-500"> · {sub}</span>}</div>
     </Card>
+  )
+}
+
+function QueuedList({ connected }: { connected: boolean }) {
+  const { data, reload } = usePoll<{ messages: (Message & { name: string })[] }>('/api/outbox', 5000)
+  const [busy, setBusy] = useState<number | null>(null)
+  const toast = useToast()
+  const go = async (id: number) => {
+    setBusy(id)
+    try { await sendNow(id); toast('ההודעה נשלחה'); reload() }
+    catch (e) { toast((e as Error).message, 'err') } finally { setBusy(null) }
+  }
+  if (!data?.messages.length) return null
+  return (
+    <ul className="mt-4 space-y-1.5 border-t border-line pt-3">
+      {data.messages.slice(0, 5).map((m) => (
+        <li key={m.id} className="flex items-center gap-2 text-sm">
+          <Clock className="size-3.5 shrink-0 text-muted" />
+          <span className="min-w-0 flex-1 truncate">{m.name}</span>
+          {connected && (
+            <button type="button" disabled={busy !== null} onClick={() => go(m.id)}
+              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700 hover:bg-brand-100 disabled:opacity-50">
+              <Zap className="size-3.5" />{busy === m.id ? 'שולח…' : 'שליחה עכשיו'}</button>
+          )}
+        </li>
+      ))}
+    </ul>
   )
 }
 

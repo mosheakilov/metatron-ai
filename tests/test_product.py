@@ -227,7 +227,7 @@ def test_opt_out_reply_blocks_number(api, ctx):
 
 def test_broker_typing_on_the_phone_takes_over_the_conversation(api, ctx):
     approve_first(api, ctx)
-    ctx.outbox.send_one(MON_11)
+    ctx.outbox.send_now(ctx.outbox.queued()[0]["id"])  # sent just now, so its echo is recent
     sent_body = ctx.gateway.sent[0][1]
     assert inbound(api, ctx, sent_body, from_me=True, id="echo") == "duplicate"
     assert inbound(api, ctx, "היי, זה דנה, אתקשר בערב", from_me=True) == "manual"
@@ -409,3 +409,39 @@ def test_paste_csv_with_header_and_import(api, ctx):
 def test_paste_without_phones_is_explained(api):
     r = api.post("/api/contacts/paste", json={"body": "רק שמות\nבלי מספרים"})
     assert r.status_code == 400 and "טלפון" in r.json()["detail"]
+
+
+# ---- send now, and no opening message after the conversation has started --------------------
+SUNDAY_NIGHT = datetime(2026, 11, 1, 23, 50)
+
+
+def test_send_now_skips_working_hours(api, ctx):
+    approve_first(api, ctx)
+    assert ctx.outbox.send_one(SUNDAY_NIGHT) is None          # waits for working hours
+    mid = ctx.outbox.queued()[0]["id"]
+    assert api.post(f"/api/outbox/{mid}/send-now").json() == {"status": "sent"}
+    assert len(ctx.gateway.sent) == 1 and not ctx.outbox.queued()
+    assert api.post(f"/api/outbox/{mid}/send-now").status_code == 404  # not twice
+
+
+def test_send_now_still_respects_opt_out(api, ctx):
+    approve_first(api, ctx)
+    ctx.store.opt_out("0501234567", None, "הסר")
+    mid = ctx.outbox.queued()[0]["id"]
+    assert api.post(f"/api/outbox/{mid}/send-now").status_code == 400 and not ctx.gateway.sent
+
+
+def test_manual_message_cancels_waiting_opening_message(api, ctx):
+    approve_first(api, ctx)
+    api.post("/api/conversations/c972501234567/send", json={"body": "היי, מדבר איתך עכשיו"})
+    ctx.outbox.send_one(MON_11)
+    ctx.outbox.send_one(MON_11 + timedelta(hours=1))
+    assert [t for _, t in ctx.gateway.sent] == ["היי, מדבר איתך עכשיו"]
+    kinds = {m["kind"]: m["status"] for m in ctx.store.messages("c972501234567")}
+    assert kinds["outreach"] == "cancelled"
+
+
+def test_typing_on_the_phone_cancels_waiting_opening_message(api, ctx):
+    approve_first(api, ctx)
+    assert inbound(api, ctx, "שלום, אני מתקשר אליך עוד מעט", from_me=True) == "manual"
+    assert ctx.outbox.send_one(MON_11) is None

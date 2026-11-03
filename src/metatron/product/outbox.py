@@ -18,7 +18,7 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from metatron.outreach.store import Store, now
+from metatron.outreach.store import Store
 from metatron.product.settings import Settings
 
 log = logging.getLogger("metatron.outbox")
@@ -95,32 +95,40 @@ class Outbox:
         with self._lock:
             at = at or datetime.now()
             msg = self.decide(at).message
-            if not msg:
-                return None
-            if msg["kind"] != "optout_confirm" and self.store.is_opted_out(msg["phone"]):
-                self.store.update_message(msg["id"], status="blocked", note="seller opted out")
-                return {**msg, "status": "blocked"}
-            typing = min(12000, 1500 + 45 * len(msg["body"])) if msg["kind"] != "outreach" else 4000
-            image = None
-            if msg.get("media"):
-                image = self.settings.media_dir / msg["media"]
-            try:
-                if image and not image.is_file():
-                    raise FileNotFoundError("התמונה של ההודעה לא נמצאה")
-                ext = self.gateway.send(msg["phone"], msg["body"], typing_ms=typing,
-                                        image=str(image) if image else None)
-                status, note = "sent", msg["note"]
-            except Exception as e:  # stays visible in the dashboard; the broker can retry
-                ext, status, note = None, "failed", str(e)[:300]
-            self.store.update_message(msg["id"], status=status, external_id=ext, note=note,
-                                      sent_at=now() if status == "sent" else None)
-            if msg["kind"] == "outreach" and status == "sent":
-                lim = self.settings.data["limits"]
-                gap = self.rng.randint(lim["min_gap_sec"], max(lim["min_gap_sec"], lim["max_gap_sec"]))
-                self.next_first_at = at + timedelta(seconds=gap)
-            if status == "failed":
-                self.store.log(msg["seller_id"], "send_failed", note or "")
-            return {**msg, "status": status, "external_id": ext}
+            return self._deliver(msg, at) if msg else None
+
+    def send_now(self, message_id: int, at: datetime | None = None) -> dict | None:
+        """The broker pressed "send now": this one message skips working hours, the daily cap
+        and the gap. The opt-out check still applies."""
+        with self._lock:
+            msg = next((m for m in self.queued() if m["id"] == message_id), None)
+            return self._deliver(msg, at or datetime.now()) if msg else None
+
+    def _deliver(self, msg: dict, at: datetime) -> dict:
+        if msg["kind"] != "optout_confirm" and self.store.is_opted_out(msg["phone"]):
+            self.store.update_message(msg["id"], status="blocked", note="seller opted out")
+            return {**msg, "status": "blocked"}
+        typing = min(12000, 1500 + 45 * len(msg["body"])) if msg["kind"] != "outreach" else 4000
+        image = None
+        if msg.get("media"):
+            image = self.settings.media_dir / msg["media"]
+        try:
+            if image and not image.is_file():
+                raise FileNotFoundError("התמונה של ההודעה לא נמצאה")
+            ext = self.gateway.send(msg["phone"], msg["body"], typing_ms=typing,
+                                    image=str(image) if image else None)
+            status, note = "sent", msg["note"]
+        except Exception as e:  # stays visible in the dashboard; the broker can retry
+            ext, status, note = None, "failed", str(e)[:300]
+        self.store.update_message(msg["id"], status=status, external_id=ext, note=note,
+                                  sent_at=at.isoformat(timespec="seconds") if status == "sent" else None)
+        if msg["kind"] == "outreach" and status == "sent":
+            lim = self.settings.data["limits"]
+            gap = self.rng.randint(lim["min_gap_sec"], max(lim["min_gap_sec"], lim["max_gap_sec"]))
+            self.next_first_at = at + timedelta(seconds=gap)
+        if status == "failed":
+            self.store.log(msg["seller_id"], "send_failed", note or "")
+        return {**msg, "status": status, "external_id": ext}
 
     def retry(self, message_id: int) -> None:
         msg = self.store.message(message_id)
