@@ -29,7 +29,8 @@ CITIES = """
 ALIASES = {'ת"א': "תל אביב", 'ראשל"צ': "ראשון לציון", 'פ"ת': "פתח תקווה", 'ב"ש': "באר שבע",
            "ק. אתא": "קריית אתא", "ק. ביאליק": "קריית ביאליק", "ק. מוצקין": "קריית מוצקין",
            "ק. ים": "קריית ים", "תל אביב-יפו": "תל אביב יפו"}
-TOWN_PREFIX = re.compile(r"^(?:כפר|קרית|קריית|מושב|קיבוץ)\s+[א-ת]")
+TOWN_PREFIX = re.compile(r"^(?:כפר|קרית|קריית|מושב|קיבוץ|גבעת|נווה|נוה|רמת|מעלה|אבן|נוף|עין|מצפה|"
+                         r"שדה|אור|באר|ראש|הר|מבוא|יד|גני|בני|צור|כוכב|טל|מגדל|נחלת|תל)\s+[א-ת]")
 
 
 def _norm(s: str) -> str:
@@ -61,7 +62,12 @@ STREET_WORD = re.compile(r"^(?:רחוב|רח['׳]|שד['׳]|שדרות)\s+[א-ת
 NOT_ADDRESS = re.compile(r"^(?:קומה|קומת|דירה|דירת|בית|חדר|חדרי|מרפסת|מרפסות|חניה|חניות|חנייה|מחסן|"
                          r"שירותים|מקלחות|כיווני|מעלית|בן|בת|גיל|שנת|בניין|בנין)(?![א-ת])")
 FILLER = {"דירה", "דירת", "נכס", "למכירה"}
-LABEL = re.compile(r"^(?:עיר|ישוב|יישוב|כתובת|רחוב|הערות?)\s*:\s*")
+LABEL = re.compile(r"^(?:עיר|ישוב|יישוב|כתובת|רחוב|הערות?|פרטים|נכס)\s*:\s*")
+# label words left alone once their value was taken ("טלפון:", "ב-" before a price)
+DROP = re.compile(r"^(?:טלפון|טל['׳]?|נייד|פלאפון|פל['׳]|מספר|וואטסאפ|שם|שם מלא|מחיר|חדרים|שטח|ב)"
+                  r"\s*[:\-]?$")
+STREET_ANY = re.compile(r"(?<![א-ת])ב?((?:רחוב|רח['׳]|שדרות|שד['׳])\s+[א-ת][א-ת\"'׳״\-]*"
+                        r"(?:\s+[א-ת][א-ת\"'׳״\-]*){0,3}?\s+\d{1,4}[א-ת]?(?:\s*/\s*\d{1,4})?)(?!\d)")
 
 
 def price_of(text: str) -> tuple[int | None, str]:
@@ -110,6 +116,19 @@ def parse(text: str) -> dict:
         out["area_sqm"] = m.group(1) or m.group(2)
         rest = rest[:m.start()] + " , " + rest[m.end():]
 
+    # "ברחוב הרצל 5" anywhere in a sentence
+    if m := STREET_ANY.search(rest):
+        out["address"] = m.group(1).strip()
+        rest = rest[:m.start()] + " , " + rest[m.end():]
+    # "בתל אביב" anywhere, but not "ירושלים 5" (a street called after a city)
+    flat = rest.replace("-", " ").replace("״", '"').replace("׳", "'")
+    for m in _CITY_RE.finditer(flat):
+        if re.match(r"\s*\d", flat[m.end():]):
+            continue
+        out["city"] = ALIASES.get(_CITY_SET[m.group(2)], _CITY_SET[m.group(2)])
+        rest = rest[:m.start()] + " , " + rest[m.end():]
+        break
+
     notes = []
     for seg in re.split(r"\s*(?:[,;|\n]|\s[-–]\s)\s*", rest):
         seg = LABEL.sub("", seg.strip(" .-–"))
@@ -125,7 +144,7 @@ def parse(text: str) -> dict:
                                                            or STREET_WORD.match(other)):
                 out["city"] = ALIASES.get(_CITY_SET[m.group(2)], _CITY_SET[m.group(2)])
                 seg = other
-        if seg in FILLER:
+        if seg in FILLER or DROP.match(seg):
             continue
         if not out["address"] and not NOT_ADDRESS.match(seg) and (ADDRESS.match(seg)
                                                                    or STREET_WORD.match(seg)):

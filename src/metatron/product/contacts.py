@@ -87,30 +87,41 @@ def read_pasted(text: str) -> tuple[list[str], list[list[str]]]:
 
     keys = ("city", "address", "rooms", "area_sqm", "asking_price", "notes")
     rows: list[dict] = []
-    pending = ""
+    pending, early = "", {}  # a name line, and details lines, still waiting for their phone
     for ln in lines:
         m = PHONE_IN_TEXT.search(ln)
         if not m:
+            if NAME_LABEL.match(ln):  # "שם: משה כהן" starts a new client
+                pending, early = NAME_LABEL.sub("", ln).strip(), {}
+                continue
             d = details.parse(ln)
-            if rows and not pending and details.found_any(d):
-                _merge(rows[-1], d)  # a details line under the client's phone line
+            if details.found_any(d) or details.LABEL.match(ln):
+                if pending or not rows:
+                    early = _merge(early or dict.fromkeys(d, ""), d)
+                else:
+                    _merge(rows[-1], d)  # a details line under the client's phone line
             else:
                 pending = f"{pending} {ln}".strip() if pending else ln
             continue
-        before = ln[:m.start()].strip(" \t,;:-–|")
+        before = PHONE_LABEL.sub("", ln[:m.start()]).strip(" \t,;:-–|")
         after = ln[m.end():].strip(" \t,;:-–|")
         name, _, extra = before.partition(",")  # "יעל כהן, חיפה 050-..." -> name, details
-        row = {"name": name.strip() or pending, "phone": m.group()}
+        name = NAME_LABEL.sub("", name).strip() or pending
+        if not name and after:  # "050-1234567 יעל כהן, חיפה"
+            name, after = _leading_name(after)
+        row = {"name": name, "phone": m.group()}
         row.update(details.parse(", ".join(x for x in (extra.strip(), after) if x)))
+        if early:
+            _merge(row, early)
         rows.append(row)
-        pending = ""
+        pending, early = "", {}
     if not rows:
         raise ValueError("לא נמצאו מספרי טלפון בטקסט")
     return (["שם", "טלפון", "עיר", "כתובת", "חדרים", "שטח", "מחיר", "הערות"],
             [[r["name"], r["phone"], *(r[k] for k in keys)] for r in rows])
 
 
-def _merge(row: dict, d: dict) -> None:
+def _merge(row: dict, d: dict) -> dict:
     for k, v in d.items():
         if not v:
             continue
@@ -118,6 +129,26 @@ def _merge(row: dict, d: dict) -> None:
             row[k] = ", ".join(x for x in (row[k], v) if x)
         elif not row[k]:
             row[k] = v
+    return row
+
+
+NAME_LABEL = re.compile(r"^\s*(?:שם(?:\s*מלא)?|שם הלקוח|לקוח|מוכר|איש קשר)\s*[:\-]\s*")
+PHONE_LABEL = re.compile(r"(?:טלפון|טל['׳]?|נייד|פלאפון|פל['׳]|מספר|וואטסאפ)\s*[:\-]?\s*$")
+STREET_START = re.compile(r"^ב?(?:רחוב|רח['׳]|שד['׳]|שדרות)$")
+
+
+def _leading_name(text: str) -> tuple[str, str]:
+    """Up to two plain words at the start, stopping where a city or street begins."""
+    head, sep, tail = text.partition(",")
+    words, take = head.split(), 0
+    while take < min(2, len(words)):
+        w, rest = words[take], " ".join(words[take:])
+        if (not re.fullmatch(r"[א-תA-Za-z\"'׳״]+", w) or STREET_START.match(w)
+                or details._CITY_RE.match(rest.replace("-", " "))):
+            break
+        take += 1
+    rest = " ".join(words[take:]) + (sep + tail if sep else "")
+    return " ".join(words[:take]), rest.strip(" ,")
 
 
 def _has_header(cells: list[str]) -> bool:
