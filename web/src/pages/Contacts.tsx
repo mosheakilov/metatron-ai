@@ -27,6 +27,8 @@ export function Contacts({ state, go }: { state: AppState; go: (p: Page) => void
     return m
   }, [data])
   const selectable = rows.filter((r) => DRAFTABLE.includes(r.status))
+  const all = data?.contacts || []
+  const selDraftable = all.filter((c) => sel.has(c.seller_id) && DRAFTABLE.includes(c.status)).map((c) => c.seller_id)
 
   const toggle = (id: string) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n })
   const draft = async (ids: string[]) => {
@@ -37,9 +39,17 @@ export function Contacts({ state, go }: { state: AppState; go: (p: Page) => void
       setSel(new Set()); reload(); go('queue')
     } catch (e) { toast((e as Error).message, 'err') } finally { setBusy(false) }
   }
-  const remove = async (id: string) => {
-    try { await api(`/api/contacts/${id}`, { method: 'DELETE' }); reload() } catch (e) { toast((e as Error).message, 'err') }
+  const [confirm, setConfirm] = useState<string[] | null>(null)
+  const remove = async (ids: string[]) => {
+    setBusy(true)
+    try {
+      const r = await api<{ deleted: number }>('/api/contacts/delete', { method: 'POST', json: { seller_ids: ids } })
+      toast(r.deleted === 1 ? 'הלקוח נמחק' : `${r.deleted} לקוחות נמחקו`)
+      setSel((s) => { const n = new Set(s); ids.forEach((i) => n.delete(i)); return n }); setConfirm(null); reload()
+    } catch (e) { toast((e as Error).message, 'err') } finally { setBusy(false) }
   }
+  const toDelete = all.filter((c) => confirm?.includes(c.seller_id))
+  const talked = toDelete.filter((c) => !DRAFTABLE.includes(c.status)).length
   const nextBatch = selectable.slice(0, state.settings.limits.daily_new).map((r) => r.seller_id)
 
   return (
@@ -66,13 +76,14 @@ export function Contacts({ state, go }: { state: AppState; go: (p: Page) => void
             </div>
           </div>
 
-          {selectable.length > 0 && (
+          {(selectable.length > 0 || sel.size > 0) && (
             <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl bg-brand-50 border border-brand-100 px-4 py-3">
               <Sparkles className="size-5 text-brand-600" />
               <span className="text-sm flex-1">
                 {sel.size ? <>נבחרו <span className="num font-bold">{sel.size}</span> מוכרים</> : <>METATRON ינסח לכל מוכר הודעה אישית, וכל אחת תחכה לאישורך לפני שהיא נשלחת.</>}
               </span>
-              {sel.size ? <Button loading={busy} onClick={() => draft([...sel])}>ניסוח הודעות לנבחרים</Button>
+              {sel.size > 0 && <Button variant="ghost" className="text-rose-600 hover:bg-rose-50" icon={<Trash2 className="size-4" />} onClick={() => setConfirm([...sel])}>מחיקה</Button>}
+              {sel.size ? selDraftable.length > 0 && <Button loading={busy} onClick={() => draft(selDraftable)}>ניסוח הודעות ל-<span className="num">{selDraftable.length}</span> נבחרים</Button>
                 : <Button loading={busy} onClick={() => draft(nextBatch)}>ניסוח ל-<span className="num">{nextBatch.length}</span> הבאים ברשימה</Button>}
             </div>
           )}
@@ -81,8 +92,8 @@ export function Contacts({ state, go }: { state: AppState; go: (p: Page) => void
             <table className="w-full text-sm">
               <thead className="text-xs text-muted">
                 <tr className="border-b border-line">
-                  <th className="w-10 px-4 py-3"><input type="checkbox" className="size-4 accent-brand-600" checked={selectable.length > 0 && selectable.every((r) => sel.has(r.seller_id))}
-                    onChange={(e) => setSel(e.target.checked ? new Set(selectable.map((r) => r.seller_id)) : new Set())} /></th>
+                  <th className="w-10 px-4 py-3"><input type="checkbox" className="size-4 accent-brand-600" checked={rows.length > 0 && rows.every((r) => sel.has(r.seller_id))}
+                    onChange={(e) => setSel(e.target.checked ? new Set(rows.map((r) => r.seller_id)) : new Set())} /></th>
                   <th className="text-right font-medium px-3 py-3">שם</th><th className="text-right font-medium px-3 py-3">טלפון</th>
                   <th className="text-right font-medium px-3 py-3 hidden lg:table-cell">נכס</th><th className="text-right font-medium px-3 py-3 hidden lg:table-cell">מחיר</th>
                   <th className="text-right font-medium px-3 py-3">סטטוס</th><th className="w-10" />
@@ -91,13 +102,13 @@ export function Contacts({ state, go }: { state: AppState; go: (p: Page) => void
               <tbody>
                 {rows.slice(0, 500).map((c) => (
                   <tr key={c.seller_id} className="border-b border-line last:border-0 hover:bg-slate-50/70">
-                    <td className="px-4 py-3">{DRAFTABLE.includes(c.status) && <input type="checkbox" className="size-4 accent-brand-600" checked={sel.has(c.seller_id)} onChange={() => toggle(c.seller_id)} />}</td>
+                    <td className="px-4 py-3"><input type="checkbox" className="size-4 accent-brand-600" checked={sel.has(c.seller_id)} onChange={() => toggle(c.seller_id)} /></td>
                     <td className="px-3 py-3 font-medium">{c.name || '—'}{c.notes && <div className="text-xs text-muted font-normal truncate max-w-48">{c.notes}</div>}</td>
                     <td className="px-3 py-3 num text-right text-slate-600">{fmtPhone(c.phone)}</td>
                     <td className="px-3 py-3 text-slate-600 hidden lg:table-cell">{[c.rooms && `${c.rooms} חד׳`, c.address, c.city].filter(Boolean).join(' · ')}</td>
                     <td className="px-3 py-3 num text-right text-slate-600 hidden lg:table-cell">{money(c.asking_price)}</td>
                     <td className="px-3 py-3"><StatusBadge status={c.status} labels={labels} /></td>
-                    <td className="px-2">{c.status === 'new' && <button aria-label="מחיקה" onClick={() => remove(c.seller_id)} className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="size-4" /></button>}</td>
+                    <td className="px-2"><button aria-label="מחיקה" title="מחיקה" onClick={() => setConfirm([c.seller_id])} className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="size-4" /></button></td>
                   </tr>
                 ))}
               </tbody>
@@ -106,6 +117,18 @@ export function Contacts({ state, go }: { state: AppState; go: (p: Page) => void
           </Card>
         </>
       )}
+
+      <Modal open={!!confirm} onClose={() => setConfirm(null)} title={toDelete.length === 1 ? `למחוק את ${toDelete[0].name || fmtPhone(toDelete[0].phone)}?` : `למחוק ${toDelete.length} לקוחות?`}>
+        <div className="space-y-3 text-[15px]">
+          <p>הלקוח יימחק מהרשימה{talked ? ' יחד עם השיחה, הפגישות והודעות שעוד מחכות לשליחה' : ''}. אי אפשר לבטל את המחיקה.</p>
+          {talked > 0 && toDelete.length > 1 && <p className="text-sm text-amber-700">ל-<span className="num">{talked}</span> מהם כבר נשלחה הודעה.</p>}
+          <p className="text-sm text-muted">מי שביקש הסרה יישאר ברשימת ההסרה, וגם אם ייובא שוב לא תישלח אליו הודעה.</p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" onClick={() => setConfirm(null)}>ביטול</Button>
+            <Button variant="danger" loading={busy} icon={<Trash2 className="size-4" />} onClick={() => confirm && remove(confirm)}>מחיקה</Button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal open={importing} onClose={() => setImporting(false)} title="ייבוא רשימת לקוחות" wide>
         <ImportWizard onDone={(r) => { toast(`${r.saved} לקוחות נשמרו (${r.new} חדשים)`); setImporting(false); reload() }} />

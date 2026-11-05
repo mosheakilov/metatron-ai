@@ -445,3 +445,23 @@ def test_typing_on_the_phone_cancels_waiting_opening_message(api, ctx):
     approve_first(api, ctx)
     assert inbound(api, ctx, "שלום, אני מתקשר אליך עוד מעט", from_me=True) == "manual"
     assert ctx.outbox.send_one(MON_11) is None
+
+
+# ---- deleting clients -----------------------------------------------------------------------
+def test_delete_clients_any_status_with_their_conversation(api, ctx):
+    approve_first(api, ctx)  # יעל: an approved opening message waits in the outbox
+    assert ctx.store.seller("c972501234567")["status"] != "new"
+    r = api.post("/api/contacts/delete", json={"seller_ids": ["c972501234567", "c972527654321", "nope"]})
+    assert r.json() == {"deleted": 2}
+    assert api.get("/api/contacts").json()["total"] == 0
+    assert ctx.store.q("SELECT * FROM messages") == []
+    assert ctx.outbox.send_one(MON_11) is None and ctx.gateway.sent == []
+    assert api.delete("/api/contacts/c972501234567").status_code == 404
+
+
+def test_deleted_client_who_opted_out_stays_blocked(api, ctx):
+    import_list(api)
+    ctx.store.opt_out("050-1234567", "c972501234567", "הסר")
+    api.delete("/api/contacts/c972501234567")
+    pre, _ = import_list(api)
+    assert any(i["problem"] == "ביקש בעבר להסיר" for i in pre["issues"])

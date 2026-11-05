@@ -121,6 +121,18 @@ class Store:
     def seller(self, seller_id: str) -> dict | None:
         return self.one("SELECT * FROM sellers WHERE seller_id=?", (seller_id,))
 
+    def delete_seller(self, seller_id: str) -> bool:
+        """Remove a client with their conversation, meetings and outcome. The opt-out list is
+        kept on purpose: a number that asked to be removed stays blocked even if re-imported."""
+        if not self.seller(seller_id):
+            return False
+        with self.lock:
+            for table in ("messages", "meetings", "outcomes", "sellers"):
+                self.db.execute(f"DELETE FROM {table} WHERE seller_id=?", (seller_id,))
+            self.db.commit()
+        self.log(None, "contact_deleted", seller_id)
+        return True
+
     def seller_by_phone(self, phone: str) -> dict | None:
         """A seller we have contacted (not one that was only scored or imported)."""
         return self.one("SELECT * FROM sellers WHERE phone_norm=? AND status NOT IN ('scored', 'new')"

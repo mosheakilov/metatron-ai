@@ -254,13 +254,14 @@ def create_app(ctx: Ctx) -> FastAPI:
 
     @app.delete("/api/contacts/{seller_id}")
     def delete_contact(seller_id: str):
-        s = store.seller(seller_id)
-        if not s:
+        if not store.delete_seller(seller_id):
             raise HTTPException(404, "not found")
-        if s["status"] != "new":
-            raise HTTPException(400, "אפשר למחוק רק איש קשר שעוד לא פנו אליו")
-        store.x("DELETE FROM sellers WHERE seller_id=?", (seller_id,))
-        return {"deleted": seller_id}
+        return {"deleted": 1}
+
+    @app.post("/api/contacts/delete")
+    def delete_contacts(body: DraftIn):
+        """Delete several clients at once (any status). Waiting messages to them go too."""
+        return {"deleted": sum(store.delete_seller(sid) for sid in body.seller_ids)}
 
     # ---- approval queue -----------------------------------------------------------------
     @app.post("/api/drafts")
