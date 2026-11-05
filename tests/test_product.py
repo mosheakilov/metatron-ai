@@ -482,3 +482,13 @@ def test_deleted_client_who_opted_out_stays_blocked(api, ctx):
     api.delete("/api/contacts/c972501234567")
     pre, _ = import_list(api)
     assert any(i["problem"] == "ביקש בעבר להסיר" for i in pre["issues"])
+
+
+def test_paste_excel_cells_without_header_maps_property_columns(api):
+    pre, got = paste(api, "יעל כהן\t050-1234567\tחיפה\tהנשיא 10\t4\t95\t2.1 מיליון\tקומה 3\n"
+                          "רון לוי\t052-7654321\tתל אביב\tהרצל 5\t3.5\t80\t1,850,000\t\n")
+    assert pre["headers"] == ["שם", "טלפון", "עיר", "כתובת", "חדרים", "שטח", "מחיר", "הערות"]
+    assert all(v is not None for v in pre["mapping"].values())
+    y = got["972501234567"]
+    assert (y["city"], y["address"], y["rooms"], y["area_sqm"], y["asking_price"], y["notes"]) == (
+        "חיפה", "הנשיא 10", 4, 95, 2100000, "קומה 3")

@@ -137,11 +137,46 @@ def _table(table: list[list[str]]) -> tuple[list[str], list[list[str]]]:
     phone_col = max(range(width), key=phones)
     headers = [f"עמודה {i + 1}" for i in range(width)]
     headers[phone_col] = "טלפון"
-    name_col = next((i for i in range(width) if i != phone_col and any(
+    kinds = {i: _column_kind([r[i] for r in table if r[i]]) for i in range(width) if i != phone_col}
+    name_col = next((i for i in range(width) if i != phone_col and not kinds[i] and any(
         re.search(r"[^\W\d_]", r[i]) for r in table)), None)
     if name_col is not None:
         headers[name_col] = "שם"
+    label = {"city": "עיר", "address": "כתובת", "rooms": "חדרים", "area_sqm": "שטח",
+             "asking_price": "מחיר"}
+    used = set()
+    for i, kind in kinds.items():
+        if kind and kind not in used and i != name_col:
+            headers[i] = label[kind]
+            used.add(kind)
+    rest = [i for i in range(width) if headers[i].startswith("עמודה")
+            and any(re.search(r"[^\W\d_]", r[i]) for r in table)]
+    if rest:
+        headers[rest[-1]] = "הערות"
     return headers, table
+
+
+def _column_kind(cells: list[str]) -> str | None:
+    """What a column without a header holds, judged by most of its cells."""
+    if not cells:
+        return None
+    votes: dict[str, int] = {}
+    for c in cells:
+        kind = None
+        if details.city_of(c):
+            kind = "city"
+        elif re.fullmatch(r"[\d,.\s₪]+", c):
+            v = _number(c) or 0
+            kind = "rooms" if 0 < v <= 12 else "area_sqm" if 15 <= v <= 2000 else (
+                "asking_price" if v >= 50_000 else None)
+        else:
+            d = details.parse(c)
+            kind = next((k for k in ("address", "rooms", "area_sqm", "asking_price")
+                         if d[k] and not d["notes"]), None)
+        if kind:
+            votes[kind] = votes.get(kind, 0) + 1
+    best = max(votes, key=votes.get, default=None)
+    return best if best and votes[best] * 2 > len(cells) else None
 
 
 def _cell(v) -> str:
@@ -210,6 +245,8 @@ def prepare(headers: list[str], rows: list[list[str]], mapping: dict[str, int | 
             "city": rec.get("city") or None, "address": rec.get("address") or None,
             "notes": rec.get("notes") or None,
             **{f: _number(rec.get(f) or "") for f in NUMERIC},
+            "asking_price": details.price_of(rec.get("asking_price") or "")[0]
+            or _number(rec.get("asking_price") or ""),
             "existing_status": existing["status"] if existing else None,
         })
     return {"ok": True, "missing": [], "contacts": contacts, "issues": issues}

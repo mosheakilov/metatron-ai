@@ -64,7 +64,7 @@ FILLER = {"דירה", "דירת", "נכס", "למכירה"}
 LABEL = re.compile(r"^(?:עיר|ישוב|יישוב|כתובת|רחוב|הערות?)\s*:\s*")
 
 
-def _price(text: str) -> tuple[int | None, str]:
+def price_of(text: str) -> tuple[int | None, str]:
     for rx, mult in PRICE:
         m = rx.search(text)
         if not m:
@@ -100,7 +100,7 @@ def parse(text: str) -> dict:
     """Return {city, address, rooms, area_sqm, asking_price, notes}; missing parts are ""."""
     out = {"city": "", "address": "", "rooms": "", "area_sqm": "", "asking_price": "", "notes": ""}
     rest = text
-    price, rest = _price(rest)
+    price, rest = price_of(rest)
     if price:
         out["asking_price"] = str(price)
     if m := ROOMS.search(rest):
