@@ -13,6 +13,7 @@ import re
 from pathlib import Path
 
 from metatron.outreach.store import Store, normalize_phone
+from metatron.product import details
 
 # field -> header aliases (lower-case, compared after removing spaces, quotes and punctuation)
 FIELDS: dict[str, list[str]] = {
@@ -84,20 +85,39 @@ def read_pasted(text: str) -> tuple[list[str], list[list[str]]]:
     if "," in lines[0] and _has_header(next(csv.reader([lines[0]]))):
         return _table(list(csv.reader(lines)))
 
-    rows, pending = [], ""
+    keys = ("city", "address", "rooms", "area_sqm", "asking_price", "notes")
+    rows: list[dict] = []
+    pending = ""
     for ln in lines:
         m = PHONE_IN_TEXT.search(ln)
         if not m:
-            pending = f"{pending} {ln}".strip() if pending else ln
+            d = details.parse(ln)
+            if rows and not pending and details.found_any(d):
+                _merge(rows[-1], d)  # a details line under the client's phone line
+            else:
+                pending = f"{pending} {ln}".strip() if pending else ln
             continue
         before = ln[:m.start()].strip(" \t,;:-–|")
         after = ln[m.end():].strip(" \t,;:-–|")
-        name = before or pending
-        rows.append([name, m.group(), after])
+        name, _, extra = before.partition(",")  # "יעל כהן, חיפה 050-..." -> name, details
+        row = {"name": name.strip() or pending, "phone": m.group()}
+        row.update(details.parse(", ".join(x for x in (extra.strip(), after) if x)))
+        rows.append(row)
         pending = ""
     if not rows:
         raise ValueError("לא נמצאו מספרי טלפון בטקסט")
-    return ["שם", "טלפון", "הערות"], rows
+    return (["שם", "טלפון", "עיר", "כתובת", "חדרים", "שטח", "מחיר", "הערות"],
+            [[r["name"], r["phone"], *(r[k] for k in keys)] for r in rows])
+
+
+def _merge(row: dict, d: dict) -> None:
+    for k, v in d.items():
+        if not v:
+            continue
+        if k == "notes":
+            row[k] = ", ".join(x for x in (row[k], v) if x)
+        elif not row[k]:
+            row[k] = v
 
 
 def _has_header(cells: list[str]) -> bool:

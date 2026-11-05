@@ -388,9 +388,26 @@ def test_paste_free_lines(api):
                           "סתם שורה בלי טלפון בסוף")
     assert pre["ok"] and pre["valid"] == 3
     assert got["972501234567"]["name"] == "יעל כהן"
-    assert got["972501234567"]["notes"] == "חיפה, הנשיא 10"
+    assert (got["972501234567"]["city"], got["972501234567"]["address"]) == ("חיפה", "הנשיא 10")
     assert got["972527654321"]["name"] == "רון לוי"
     assert got["972541112233"]["name"] == "מיכל"  # name line, then phone line
+
+
+def test_paste_free_lines_pick_up_property_details(api):
+    pre, got = paste(api, "רון לוי 052-7654321 הרצל 5 תל אביב 3.5 חד' 1,850,000 ₪ קומה 2\n"
+                          "מיכל\n0541112233\n"
+                          'רחוב ביאליק 12, רמת גן, 5 חדרים, 140 מ"ר, 3.2 מיליון\n'
+                          "דני, באר שבע 053-3334444 דירת גן 950 אלף")
+    assert {k: v for k, v in got["972527654321"].items() if k in (
+        "city", "address", "rooms", "asking_price", "notes")} == {
+        "city": "תל אביב", "address": "הרצל 5", "rooms": 3.5, "asking_price": 1850000,
+        "notes": "קומה 2"}
+    m = got["972541112233"]  # the details line under the phone line belongs to מיכל
+    assert (m["city"], m["address"], m["rooms"], m["area_sqm"], m["asking_price"]) == (
+        "רמת גן", "רחוב ביאליק 12", 5, 140, 3200000)
+    d = got["972533334444"]
+    assert (d["name"], d["city"], d["asking_price"], d["notes"]) == ("דני", "באר שבע", 950000,
+                                                                    "דירת גן")
 
 
 def test_paste_from_excel_with_and_without_header(api):

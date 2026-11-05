@@ -4,7 +4,7 @@ import { api, fmtPhone, money } from '../api'
 import { Button, Card, cx, Spinner } from '../ui'
 
 type Issue = { row: number; name: string; phone: string; problem: string }
-type Contact = { seller_id: string; name: string; phone: string; city: string | null; address: string | null; asking_price: number | null; existing_status: string | null }
+type Contact = { seller_id: string; name: string; phone: string; city: string | null; address: string | null; rooms: number | null; area_sqm: number | null; notes: string | null; asking_price: number | null; existing_status: string | null }
 type Summary = { ok: boolean; missing: string[]; valid: number; new: number; existing: number; issues: Issue[]; preview: Contact[] }
 type Preview = Summary & { token: string; filename: string; headers: string[]; n_rows: number; mapping: Record<string, number | null>; fields: string[]; required: string[] }
 
@@ -65,10 +65,10 @@ export function ImportWizard({ onDone }: { onDone: (r: { saved: number; new: num
         {source === 'text' ? (
           <div>
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={9} autoFocus
-              placeholder={'לקוח בכל שורה, לדוגמה:\nיעל כהן 050-1234567 חיפה, הנשיא 10\nרון לוי 052-7654321\n\nאפשר גם להדביק תאים שהועתקו מ-Excel או מ-Google Sheets.'}
+              placeholder={'לקוח בכל שורה, לדוגמה:\nיעל כהן 050-1234567 חיפה, הנשיא 10, 4 חדרים, 2.1 מיליון\nרון לוי 052-7654321 תל אביב, הרצל 5, 95 מ״ר\n\nאפשר גם להדביק תאים שהועתקו מ-Excel או מ-Google Sheets.'}
               className="w-full resize-y rounded-xl border border-line p-3.5 text-[15px] leading-relaxed outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100" />
             <div className="mt-3 flex items-center justify-between gap-3">
-              <span className="text-xs text-muted">המספר יכול להופיע בכל מקום בשורה. מה שלפניו הוא השם, ומה שאחריו נשמר כהערה.</span>
+              <span className="text-xs text-muted">המספר יכול להופיע בכל מקום בשורה. מה שלפניו הוא השם. מאחריו מזוהים עיר, כתובת, חדרים, מ״ר ומחיר, והשאר נשמר כהערה.</span>
               <Button loading={busy} disabled={!text.trim()} onClick={fromText}>המשך לבדיקה</Button>
             </div>
             {err && <div className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{err}</div>}
@@ -124,14 +124,15 @@ export function ImportWizard({ onDone }: { onDone: (r: { saved: number; new: num
           <Card className="overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-muted text-xs">
-                <tr><th className="text-right font-medium px-4 py-2">שם</th><th className="text-right font-medium px-4 py-2">טלפון</th><th className="text-right font-medium px-4 py-2">כתובת</th><th className="text-right font-medium px-4 py-2">מחיר</th></tr>
+                <tr><th className="text-right font-medium px-4 py-2">שם</th><th className="text-right font-medium px-4 py-2">טלפון</th><th className="text-right font-medium px-4 py-2">נכס</th><th className="text-right font-medium px-4 py-2">מחיר</th></tr>
               </thead>
               <tbody>
                 {pre.preview.map((c) => (
                   <tr key={c.seller_id} className="border-t border-line">
                     <td className="px-4 py-2 font-medium">{c.name}</td>
                     <td className="px-4 py-2 num text-right">{fmtPhone(c.phone)}</td>
-                    <td className="px-4 py-2 text-muted">{[c.address, c.city].filter(Boolean).join(', ')}</td>
+                    <td className="px-4 py-2 text-slate-600">{[c.address, c.city].filter(Boolean).join(', ') || <span className="text-slate-300">—</span>}
+                      {(c.rooms || c.area_sqm || c.notes) && <div className="text-xs text-muted">{[c.rooms && `${c.rooms} חד׳`, c.area_sqm && `${c.area_sqm} מ״ר`, c.notes].filter(Boolean).join(' · ')}</div>}</td>
                     <td className="px-4 py-2 num text-right">{money(c.asking_price)}</td>
                   </tr>
                 ))}
