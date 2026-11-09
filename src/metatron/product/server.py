@@ -238,7 +238,7 @@ def create_app(ctx: Ctx) -> FastAPI:
         new = sum(1 for c in prep["contacts"] if not c["existing_status"])
         return {"ok": prep["ok"], "missing": prep["missing"], "valid": len(prep["contacts"]),
                 "new": new, "existing": len(prep["contacts"]) - new, "issues": prep["issues"],
-                "preview": prep["contacts"][:8]}
+                "checks": prep.get("checks", []), "preview": prep["contacts"][:200]}
 
     @app.get("/api/contacts")
     def list_contacts(status: str | None = None, q: str | None = None, limit: int = 1000):

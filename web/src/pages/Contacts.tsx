@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Search, Sparkles, Trash2, Upload, Users } from 'lucide-react'
-import { api, fmtPhone, money, usePoll, type AppState, type Seller } from '../api'
+import { api, fmtPhone, money, propertyLine, usePoll, type AppState, type Seller } from '../api'
 import { ImportWizard } from '../components/ImportWizard'
 import type { Page } from '../shell'
 import { Button, Card, cx, Empty, inputCls, Modal, PageHeader, Spinner, StatusBadge, useToast } from '../ui'
@@ -20,7 +20,7 @@ export function Contacts({ state, go }: { state: AppState; go: (p: Page) => void
 
   const rows = useMemo(() => (data?.contacts || []).filter((c) =>
     (!filter || c.status === filter) &&
-    (!q || [c.name, c.phone, c.city, c.address].some((v) => v?.includes(q)))), [data, filter, q])
+    (!q || [c.name, c.phone, c.city, c.address, c.neighborhood, c.property_type].some((v) => v?.includes(q)))), [data, filter, q])
   const counts = useMemo(() => {
     const m: Record<string, number> = {}
     for (const c of data?.contacts || []) m[c.status] = (m[c.status] || 0) + 1
@@ -105,7 +105,7 @@ export function Contacts({ state, go }: { state: AppState; go: (p: Page) => void
                     <td className="px-4 py-3"><input type="checkbox" className="size-4 accent-brand-600" checked={sel.has(c.seller_id)} onChange={() => toggle(c.seller_id)} /></td>
                     <td className="px-3 py-3 font-medium">{c.name || '—'}{c.notes && <div className="text-xs text-muted font-normal truncate max-w-48">{c.notes}</div>}</td>
                     <td className="px-3 py-3 num text-right text-slate-600">{fmtPhone(c.phone)}</td>
-                    <td className="px-3 py-3 text-slate-600 hidden lg:table-cell">{[c.rooms && `${c.rooms} חד׳`, c.address, c.city].filter(Boolean).join(' · ')}</td>
+                    <td className="px-3 py-3 text-slate-600 hidden lg:table-cell">{[c.address, c.city].filter(Boolean).join(', ')}{propertyLine(c) && <div className="text-xs text-muted">{propertyLine(c)}</div>}</td>
                     <td className="px-3 py-3 num text-right text-slate-600 hidden lg:table-cell">{money(c.asking_price)}</td>
                     <td className="px-3 py-3"><StatusBadge status={c.status} labels={labels} /></td>
                     <td className="px-2"><button aria-label="מחיקה" title="מחיקה" onClick={() => setConfirm([c.seller_id])} className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="size-4" /></button></td>

@@ -488,7 +488,8 @@ def test_paste_excel_cells_without_header_maps_property_columns(api):
     pre, got = paste(api, "יעל כהן\t050-1234567\tחיפה\tהנשיא 10\t4\t95\t2.1 מיליון\tקומה 3\n"
                           "רון לוי\t052-7654321\tתל אביב\tהרצל 5\t3.5\t80\t1,850,000\t\n")
     assert pre["headers"] == ["שם", "טלפון", "עיר", "כתובת", "חדרים", "שטח", "מחיר", "הערות"]
-    assert all(v is not None for v in pre["mapping"].values())
+    assert all(pre["mapping"][f] is not None for f in ("name", "phone", "city", "address", "rooms",
+                                                        "area_sqm", "asking_price", "notes"))
     y = got["972501234567"]
     assert (y["city"], y["address"], y["rooms"], y["area_sqm"], y["asking_price"], y["notes"]) == (
         "חיפה", "הנשיא 10", 4, 95, 2100000, "קומה 3")
@@ -505,3 +506,56 @@ def test_paste_labelled_lines_phone_first_and_sentences(api):
     assert (d["name"], d["city"], d["rooms"]) == ("דני לוי", "נתניה", 3)
     assert (r["city"], r["address"], r["rooms"], r["asking_price"]) == (
         "תל אביב", "רחוב הרצל 5", 5, 2500000)
+
+
+# ---- a list of ads copied from a listing site: one field per line, 14 lines per ad ----------
+ADS_HEADER = ("סוג עסקה\nכתובת\nסוג נכס\nחדרים\nקומה\nמחיר\nטלפון\nעדכון מודעה\nשכונה\nמ\"ר\n"
+              "מספר קומות בבניין\nאיש קשר\nמספר מודעה\n")
+
+
+def ad(street, kind, rooms, floor, price, phone, day, area, floors, name, ref):
+    return "\n".join(["למכירה", "תל אביב יפו", street, kind, rooms, floor, price, phone, day,
+                      "יד אליהו", area, floors, name, ref]) + "\n"
+
+
+ADS = (ad("וינגייט 1", "גג/ פנטהאוז", "4", "32", "11,250,000 ₪", "050-0000001", "09/11/2026",
+          "227", "32", "נתי", "57505694")
+       + ad("חנה סנש 4", "דירה", "4.5", "2", "3,100,000 ₪", "050-0000002", "09/11/2026", "103",
+            "3", "חנן", "57519887")
+       + ad("משה אהרון טוב 1", "דירת גן", "2", "2", "4,224,242 ₪", "050-0000003", "09/11/2026",
+            "4,444", "2", "אסף", "57070547")
+       + ad("לוחמי גליפולי 53", "דירה", "4", "2", "10,000 ₪", "050-0000004", "08/11/2026", "135",
+            "2", "חגית", "57686589")
+       + ad("הפלמ\"ח 17", "דירה", "3", "2", "3,160,000 ₪", "050-0000005", "09/11/2026", "65", "7",
+            "אורלי", "57629515")
+       + ad("לוחמי גליפולי 37", "בית פרטי/ קוטג'", "3", "0", "6,000,000 ₪", "050-0000006",
+            "20/10/2026", "193", "-", "יהודה", "57081003"))
+
+
+@pytest.mark.parametrize("header", ["", ADS_HEADER])
+def test_paste_ads_one_field_per_line(api, ctx, header):
+    pre, got = paste(api, header + ADS)
+    assert pre["ok"] and pre["valid"] == 6 and not pre["issues"]
+    assert all(v is not None for f, v in pre["mapping"].items() if f != "notes")
+    n = got["972500000001"]
+    assert {k: n[k] for k in ("name", "city", "address", "property_type", "rooms", "floor",
+                               "floors_total", "area_sqm", "asking_price", "neighborhood",
+                               "listing_ref", "listed_on", "deal_type")} == {
+        "name": "נתי", "city": "תל אביב יפו", "address": "וינגייט 1", "property_type": "גג/ פנטהאוז",
+        "rooms": 4, "floor": 32, "floors_total": 32, "area_sqm": 227, "asking_price": 11250000,
+        "neighborhood": "יד אליהו", "listing_ref": "57505694", "listed_on": "2026-11-09",
+        "deal_type": "למכירה"}
+    assert got["972500000006"]["floor"] == 0 and got["972500000006"]["floors_total"] is None
+    assert {c["phone"] for c in pre["checks"]} == {"050-0000003", "050-0000004"}  # 4,444 m², 10,000 ₪
+    api.post("/api/contacts/import", json={"token": pre["token"], "mapping": pre["mapping"]})
+    s = ctx.store.seller("c972500000002")
+    assert (s["property_type"], s["floor"], s["neighborhood"], s["listing_ref"]) == (
+        "דירה", 2, "יד אליהו", "57519887")
+
+
+def test_template_uses_property_type_rooms_and_neighbourhood(ctx):
+    from metatron.outreach.drafting import render_template
+    seller = {"name": "נתי", "address": "וינגייט 1", "city": "תל אביב יפו", "rooms": 4.0,
+              "property_type": "גג/ פנטהאוז", "neighborhood": "יד אליהו"}
+    text = render_template("שלום {שם}, ראיתי את {נכס} ({חדרים}, {שכונה}).", seller, ctx.cfg)
+    assert text.startswith("שלום נתי, ראיתי את הפנטהאוז בוינגייט 1, תל אביב יפו (4 חדרים, יד אליהו).")

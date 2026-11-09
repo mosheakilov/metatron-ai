@@ -1,16 +1,17 @@
 import { useRef, useState } from 'react'
 import { AlertTriangle, CheckCircle2, ClipboardPaste, FileSpreadsheet, UploadCloud } from 'lucide-react'
-import { api, fmtPhone, money } from '../api'
+import { api, fmtPhone, money, propertyLine, type Seller } from '../api'
 import { Button, Card, cx, Spinner } from '../ui'
 
 type Issue = { row: number; name: string; phone: string; problem: string }
-type Contact = { seller_id: string; name: string; phone: string; city: string | null; address: string | null; rooms: number | null; area_sqm: number | null; notes: string | null; asking_price: number | null; existing_status: string | null }
-type Summary = { ok: boolean; missing: string[]; valid: number; new: number; existing: number; issues: Issue[]; preview: Contact[] }
+type Contact = Seller & { existing_status: string | null }
+type Summary = { ok: boolean; missing: string[]; valid: number; new: number; existing: number; issues: Issue[]; checks: Issue[]; preview: Contact[] }
 type Preview = Summary & { token: string; filename: string; headers: string[]; n_rows: number; mapping: Record<string, number | null>; fields: string[]; required: string[] }
 
 const FIELD_HE: Record<string, string> = {
   name: 'שם', phone: 'טלפון', city: 'עיר', address: 'כתובת', rooms: 'חדרים', area_sqm: 'שטח (מ"ר)',
-  asking_price: 'מחיר מבוקש', notes: 'הערות',
+  asking_price: 'מחיר מבוקש', notes: 'הערות', deal_type: 'סוג עסקה', property_type: 'סוג נכס', floor: 'קומה',
+  floors_total: 'קומות בבניין', neighborhood: 'שכונה', listing_ref: 'מספר מודעה', listed_on: 'תאריך פרסום',
 }
 
 /** Upload an Excel/CSV client list, check the column mapping, then save. Nothing is sent. */
@@ -121,10 +122,16 @@ export function ImportWizard({ onDone }: { onDone: (r: { saved: number; new: num
             <Stat n={pre.existing} label="כבר ברשימה (יעודכנו)" tone="text-slate-700" />
             <Stat n={pre.issues.length} label="שורות שידולגו" tone={pre.issues.length ? 'text-amber-600' : 'text-slate-400'} />
           </div>
-          <Card className="overflow-hidden">
+          {pre.checks?.length > 0 && (
+            <div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
+              <div className="flex items-center gap-2 font-medium"><AlertTriangle className="size-4" />כדאי לבדוק {pre.checks.length === 1 ? 'מודעה אחת' : <><span className="num">{pre.checks.length}</span> מודעות</>} (ייובאו בכל מקרה)</div>
+              <ul className="mt-2 space-y-1">{pre.checks.map((i) => <li key={i.phone}>{i.name || '—'} <span className="num">{i.phone}</span> · {i.problem}</li>)}</ul>
+            </div>
+          )}
+          <Card className="max-h-96 overflow-y-auto scroll-thin">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-muted text-xs">
-                <tr><th className="text-right font-medium px-4 py-2">שם</th><th className="text-right font-medium px-4 py-2">טלפון</th><th className="text-right font-medium px-4 py-2">נכס</th><th className="text-right font-medium px-4 py-2">מחיר</th></tr>
+                <tr><th className="text-right font-medium px-4 py-2">שם</th><th className="text-right font-medium px-4 py-2">טלפון</th><th className="text-right font-medium px-4 py-2">נכס</th><th className="text-right font-medium px-4 py-2">מחיר</th><th className="text-right font-medium px-4 py-2">פורסם</th></tr>
               </thead>
               <tbody>
                 {pre.preview.map((c) => (
@@ -132,8 +139,9 @@ export function ImportWizard({ onDone }: { onDone: (r: { saved: number; new: num
                     <td className="px-4 py-2 font-medium">{c.name}</td>
                     <td className="px-4 py-2 num text-right">{fmtPhone(c.phone)}</td>
                     <td className="px-4 py-2 text-slate-600">{[c.address, c.city].filter(Boolean).join(', ') || <span className="text-slate-300">—</span>}
-                      {(c.rooms || c.area_sqm || c.notes) && <div className="text-xs text-muted">{[c.rooms && `${c.rooms} חד׳`, c.area_sqm && `${c.area_sqm} מ״ר`, c.notes].filter(Boolean).join(' · ')}</div>}</td>
+                      {(propertyLine(c) || c.notes) && <div className="text-xs text-muted">{[propertyLine(c), c.notes].filter(Boolean).join(' · ')}</div>}</td>
                     <td className="px-4 py-2 num text-right">{money(c.asking_price)}</td>
+                    <td className="px-4 py-2 num text-right text-xs text-muted">{c.listed_on ? c.listed_on.split('-').reverse().join('/') : ''}</td>
                   </tr>
                 ))}
               </tbody>

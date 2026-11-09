@@ -4,6 +4,15 @@ export type Seller = {
   seller_id: string; name: string; phone: string; city: string | null; address: string | null
   rooms: number | null; area_sqm: number | null; asking_price: number | null; notes: string | null
   status: string; rank: number | null; updated_at: string
+  property_type?: string | null; floor?: number | null; floors_total?: number | null; neighborhood?: string | null
+  deal_type?: string | null; listing_ref?: string | null; listed_on?: string | null; days_on_market?: number | null
+}
+
+/** "דירה · 4 חד׳ · 103 מ״ר · קומה 2/3 · יד אליהו" */
+export function propertyLine(c: Partial<Seller>): string {
+  const floor = c.floor != null ? `קומה ${c.floor}${c.floors_total ? `/${c.floors_total}` : ''}` : ''
+  return [c.property_type, c.rooms && `${c.rooms} חד׳`, c.area_sqm && `${Math.round(c.area_sqm)} מ״ר`, floor, c.neighborhood]
+    .filter(Boolean).join(' · ')
 }
 export type Message = {
   id: number; seller_id: string; direction: 'in' | 'out'; kind: string; body: string

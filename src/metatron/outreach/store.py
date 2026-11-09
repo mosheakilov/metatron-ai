@@ -49,6 +49,12 @@ CREATE TABLE IF NOT EXISTS events (
 """
 
 
+# details of the seller's listing (ad lists from Yad2 and the like)
+LISTING_COLUMNS = [("property_type", "TEXT"), ("floor", "INTEGER"), ("floors_total", "INTEGER"),
+                   ("neighborhood", "TEXT"), ("deal_type", "TEXT"), ("listing_ref", "TEXT"),
+                   ("listed_on", "TEXT")]
+
+
 def now() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
@@ -75,7 +81,8 @@ class Store:
     def _migrate(self) -> None:
         """Columns added after the first release; old databases get them in place."""
         for table, col, ddl in [("sellers", "phone_norm", "TEXT"), ("sellers", "notes", "TEXT"),
-                                ("messages", "sent_at", "TEXT"), ("messages", "media", "TEXT")]:
+                                ("messages", "sent_at", "TEXT"), ("messages", "media", "TEXT"),
+                                *(("sellers", c, t) for c, t in LISTING_COLUMNS)]:
             if col not in {r["name"] for r in self.q(f"PRAGMA table_info({table})")}:
                 self.db.execute(f"ALTER TABLE {table} ADD COLUMN {col} {ddl}")
         for r in self.q("SELECT seller_id, phone FROM sellers WHERE phone_norm IS NULL"):
@@ -108,7 +115,7 @@ class Store:
         """Insert or refresh sellers. The status of an existing seller is never reset."""
         cols = ["seller_id", "name", "phone", "city", "address", "rooms", "area_sqm",
                 "asking_price", "days_on_market", "price_drops", "score", "rank",
-                "model_version", "run_id", "notes", "phone_norm"]
+                "model_version", "run_id", "notes", "phone_norm", *(c for c, _ in LISTING_COLUMNS)]
         sql = (f"INSERT INTO sellers({','.join(cols)}, status, updated_at) "
                f"VALUES ({','.join('?' * len(cols))}, ?, ?) "
                "ON CONFLICT(seller_id) DO UPDATE SET "

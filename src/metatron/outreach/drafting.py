@@ -45,12 +45,29 @@ def _ensure_opt_out(text: str, cfg: Config | None = None) -> str:
     return text if OPT_OUT_LINE in text else f"{text}\n{OPT_OUT_LINE}"
 
 
+def property_noun(kind: str | None) -> str:
+    """"גג/ פנטהאוז" -> "הפנטהאוז", "דירת גן" -> "דירת הגן", nothing -> "הנכס"."""
+    k = (kind or "").replace(" ", "")
+    for key, noun in (("פנטהאוז", "הפנטהאוז"), ("דירתגן", "דירת הגן"), ("דירתגג", "דירת הגג"),
+                      ("קוטג", "הבית"), ("ביתפרטי", "הבית"), ("דומשפחתי", "הבית"), ("וילה", "הווילה"),
+                      ("דופלקס", "הדופלקס"), ("מגרש", "המגרש"), ("סטודיו", "הסטודיו"),
+                      ("דירה", "הדירה")):
+        if key in k:
+            return noun
+    return "הנכס"
+
+
 def render_template(template: str, seller: dict, cfg: Config) -> str:
-    """The broker's own opening message. Placeholders: {שם} {חתימה} {נכס} {עיר}."""
+    """The broker's own opening message.
+    Placeholders: {שם} {חתימה} {נכס} {עיר} {חדרים} {שכונה}."""
     first = (seller.get("name") or "").split(" ")[0]
     place = ", ".join(x for x in (seller.get("address"), seller.get("city")) if x)
+    noun = property_noun(seller.get("property_type"))
+    rooms = seller.get("rooms")
     values = {"שם": first, "חתימה": _signature(cfg), "עיר": seller.get("city") or "",
-              "נכס": f"הנכס ב{place}" if place else "הנכס שלך"}
+              "נכס": f"{noun} ב{place}" if place else f"{noun} שלך",
+              "חדרים": f"{rooms:g} חדרים" if isinstance(rooms, int | float) and rooms else "",
+              "שכונה": seller.get("neighborhood") or ""}
     text = template
     for k, v in values.items():
         text = text.replace("{" + k + "}", str(v))
@@ -86,7 +103,9 @@ def draft_outreach(seller: dict, cfg: Config, llm=None) -> str:
     if llm is None:
         return template_outreach(seller, cfg)
     facts = {k: seller.get(k) for k in ("name", "city", "address", "rooms", "asking_price",
-                                         "days_on_market", "price_drops")}
+                                         "days_on_market", "price_drops", "property_type",
+                                         "neighborhood", "floor", "floors_total", "area_sqm")
+             if seller.get(k) not in (None, "")}
     guide = cfg["outreach"].get("template")
     style = (f"The broker's own template (keep its intent and facts, personalise it, and never "
              f"claim you saw an ad unless the notes say so):\n{render_template(guide, seller, cfg)}\n"

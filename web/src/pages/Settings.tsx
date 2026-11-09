@@ -185,7 +185,7 @@ function Section({ title, sub, children }: { title: string; sub?: string; childr
   )
 }
 
-const PLACEHOLDERS: [string, string][] = [['{שם}', 'שם פרטי'], ['{נכס}', 'הנכס והכתובת'], ['{עיר}', 'עיר'], ['{חתימה}', 'השם והמשרד']]
+const PLACEHOLDERS: [string, string][] = [['{שם}', 'שם פרטי'], ['{נכס}', 'הנכס והכתובת'], ['{עיר}', 'עיר'], ['{חדרים}', 'מספר חדרים'], ['{שכונה}', 'שכונה'], ['{חתימה}', 'השם והמשרד']]
 
 function TemplateEditor({ value, onChange, optOut, image }: { value: string; onChange: (v: string) => void; optOut: boolean; image: string }) {
   const [preview, setPreview] = useState<{ text: string; seller: string } | null>(null)
