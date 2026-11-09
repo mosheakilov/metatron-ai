@@ -33,7 +33,7 @@ function DealSwitch({ deal, onDeal, dark }: { deal: Deal; onDeal: (d: Deal) => v
         return (
           <button key={d} role="tab" aria-selected={on} onClick={() => onDeal(d)}
             className={cx('flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition',
-              on ? (d === 'sale' ? 'bg-white text-brand-800 shadow-sm' : 'bg-emerald-400 text-emerald-950 shadow-sm')
+              on ? 'bg-emerald-400 text-emerald-950 shadow-sm'
                 : dark ? 'text-indigo-200/80 hover:text-white' : 'text-muted')}>
             <Icon className="size-4" />{DEAL_HE[d]}
           </button>
