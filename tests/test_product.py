@@ -544,7 +544,7 @@ def test_paste_ads_one_field_per_line(api, ctx, header):
         "name": "נתי", "city": "תל אביב יפו", "address": "וינגייט 1", "property_type": "גג/ פנטהאוז",
         "rooms": 4, "floor": 32, "floors_total": 32, "area_sqm": 227, "asking_price": 11250000,
         "neighborhood": "יד אליהו", "listing_ref": "57505694", "listed_on": "2026-11-09",
-        "deal_type": "למכירה"}
+        "deal_type": "sale"}
     assert got["972500000006"]["floor"] == 0 and got["972500000006"]["floors_total"] is None
     assert {c["phone"] for c in pre["checks"]} == {"050-0000003", "050-0000004"}  # 4,444 m², 10,000 ₪
     api.post("/api/contacts/import", json={"token": pre["token"], "mapping": pre["mapping"]})
@@ -559,3 +559,43 @@ def test_template_uses_property_type_rooms_and_neighbourhood(ctx):
               "property_type": "גג/ פנטהאוז", "neighborhood": "יד אליהו"}
     text = render_template("שלום {שם}, ראיתי את {נכס} ({חדרים}, {שכונה}).", seller, ctx.cfg)
     assert text.startswith("שלום נתי, ראיתי את הפנטהאוז בוינגייט 1, תל אביב יפו (4 חדרים, יד אליהו).")
+
+
+# ---- sale and rent are run side by side, each in its own tab ---------------------------------
+RENT = {"x-deal": "rent"}
+
+
+def test_sale_and_rent_are_kept_apart(api, ctx):
+    import_list(api)  # no deal column, imported in the sale tab
+    pre = api.post("/api/contacts/paste", headers=RENT,
+                   json={"body": "דנה 050-0000011 חיפה, הנשיא 3, 3 חדרים, 6,500 ₪\n"}).json()
+    assert pre["rent"] == 1 and pre["preview"][0]["asking_price"] == 6500 and not pre["checks"]
+    api.post("/api/contacts/import", headers=RENT, json={"token": pre["token"], "mapping": pre["mapping"]})
+    sale, rent = api.get("/api/contacts").json(), api.get("/api/contacts", headers=RENT).json()
+    assert {c["seller_id"] for c in rent["contacts"]} == {"c972500000011"} and rent["other"] == 2
+    assert "c972500000011" not in {c["seller_id"] for c in sale["contacts"]} and sale["total"] == 2
+
+    api.put("/api/settings", json={"message_template_rent": "שלום {שם}, {נכס} עדיין פנוי להשכרה?"})
+    api.post("/api/drafts", json={"seller_ids": ["c972501234567"]})
+    api.post("/api/drafts", headers=RENT, json={"seller_ids": ["c972500000011"]})
+    rent_q, sale_q = api.get("/api/queue", headers=RENT).json(), api.get("/api/queue").json()
+    assert [d["seller_id"] for d in rent_q["drafts"]] == ["c972500000011"] and rent_q["other"] == 1
+    assert rent_q["drafts"][0]["body"].startswith("שלום דנה, הנכס בהנשיא 3, חיפה עדיין פנוי להשכרה?")
+    assert "למכירה" in sale_q["drafts"][0]["body"]
+    assert api.get("/api/stats", headers=RENT).json()["pending_approval"] == 1
+
+
+def test_a_list_marked_for_rent_goes_to_rent_whatever_the_tab(api):
+    text = ADS.replace("למכירה", "להשכרה").replace("11,250,000 ₪", "25,000 ₪")
+    pre = api.post("/api/contacts/paste", json={"body": text}).json()
+    assert pre["rent"] == 6 and all(c["deal_type"] == "rent" for c in pre["preview"])
+
+
+def test_each_deal_has_its_own_picture(api, ctx):
+    sale = api.post("/api/media/outreach", files={"file": ("a.png", png_bytes())}).json()
+    rent = api.post("/api/media/outreach", headers=RENT,
+                    files={"file": ("b.png", png_bytes("blue"))}).json()
+    assert sale["outreach_image"] and rent["outreach_image_rent"]
+    assert rent["outreach_image_rent"] != rent["outreach_image"]
+    api.delete("/api/media/outreach", headers=RENT)
+    assert ctx.settings.data["outreach_image_rent"] == "" and ctx.settings.data["outreach_image"]

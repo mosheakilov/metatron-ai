@@ -175,7 +175,7 @@ class OutreachFlow(Flow[OutreachState]):
     def draft_answer(self):
         seller = self._seller()
         body = drafting.draft_answer(self.state.text, self.store.messages(seller["seller_id"]),
-                                     self.cfg, self._llm("smart"))
+                                     self.cfg, self._llm("smart"), seller=seller)
         self.state.message_id = self.store.add_message(seller["seller_id"], "out", "answer",
                                                        body, "draft")
         self.store.set_status(seller["seller_id"], "awaiting_approval")

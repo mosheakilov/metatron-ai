@@ -88,6 +88,9 @@ class Store:
         for r in self.q("SELECT seller_id, phone FROM sellers WHERE phone_norm IS NULL"):
             self.db.execute("UPDATE sellers SET phone_norm=? WHERE seller_id=?",
                             (normalize_phone(r["phone"]), r["seller_id"]))
+        self.db.execute("UPDATE sellers SET deal_type = CASE WHEN deal_type LIKE '%השכר%' "
+                        "OR deal_type='rent' THEN 'rent' ELSE 'sale' END "
+                        "WHERE deal_type IS NULL OR deal_type NOT IN ('sale', 'rent')")
         self.db.execute("CREATE INDEX IF NOT EXISTS sellers_phone ON sellers(phone_norm)")
         self.db.commit()
 
@@ -120,7 +123,8 @@ class Store:
                f"VALUES ({','.join('?' * len(cols))}, ?, ?) "
                "ON CONFLICT(seller_id) DO UPDATE SET "
                + ", ".join(f"{c}=excluded.{c}" for c in cols[1:]) + ", updated_at=excluded.updated_at")
-        rows = [{**r, "phone_norm": normalize_phone(r.get("phone") or "")} for r in rows]
+        rows = [{**r, "phone_norm": normalize_phone(r.get("phone") or ""),
+                 "deal_type": r.get("deal_type") or "sale"} for r in rows]
         with self.lock:
             self.db.executemany(sql, [tuple(r.get(c) for c in cols) + (status, now()) for r in rows])
             self.db.commit()

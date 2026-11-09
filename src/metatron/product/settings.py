@@ -27,6 +27,12 @@ DEFAULTS: dict[str, Any] = {
                          "רציתי לבדוק אם {נכס} עדיין עומד למכירה. המשרד שלנו פעיל באזור, "
                          "ואשמח להכיר את הנכס.\n"
                          "אפשר לקבוע פגישה קצרה של חצי שעה?"),
+    # Rentals are run the same way, with their own opening message and picture.
+    "message_template_rent": ("שלום {שם}, כאן {חתימה}.\n"
+                              "רציתי לבדוק אם {נכס} עדיין פנוי להשכרה. יש לי שוכרים רציניים "
+                              "שמחפשים באזור.\n"
+                              "אפשר לתאם הצצה קצרה בנכס?"),
+    "outreach_image_rent": "",
     # The broker decides whether messages end with 'להסרה השיבו "הסר".' A reply of "הסר" is
     # honoured either way.
     "include_opt_out": True,
@@ -122,6 +128,7 @@ class Settings:
                                broker_name=d["broker_name"],
                                office_name=d["office_name"] or d["broker_name"],
                                template=d["message_template"],
+                               template_rent=d["message_template_rent"],
                                include_opt_out=d["include_opt_out"])
         cfg["calendar"]["slots"].update(weekdays=d["availability"]["weekdays"],
                                         hours=d["availability"]["hours"],

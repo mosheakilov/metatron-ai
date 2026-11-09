@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
 import { AlertTriangle, CheckCircle2, ClipboardPaste, FileSpreadsheet, UploadCloud } from 'lucide-react'
-import { api, fmtPhone, money, propertyLine, type Seller } from '../api'
+import { api, fmtPhone, getDeal, money, propertyLine, type Seller } from '../api'
 import { Button, Card, cx, Spinner } from '../ui'
 
 type Issue = { row: number; name: string; phone: string; problem: string }
 type Contact = Seller & { existing_status: string | null }
-type Summary = { ok: boolean; missing: string[]; valid: number; new: number; existing: number; issues: Issue[]; checks: Issue[]; preview: Contact[] }
+type Summary = { ok: boolean; rent: number; missing: string[]; valid: number; new: number; existing: number; issues: Issue[]; checks: Issue[]; preview: Contact[] }
 type Preview = Summary & { token: string; filename: string; headers: string[]; n_rows: number; mapping: Record<string, number | null>; fields: string[]; required: string[] }
 
 const FIELD_HE: Record<string, string> = {
@@ -122,6 +122,8 @@ export function ImportWizard({ onDone }: { onDone: (r: { saved: number; new: num
             <Stat n={pre.existing} label="כבר ברשימה (יעודכנו)" tone="text-slate-700" />
             <Stat n={pre.issues.length} label="שורות שידולגו" tone={pre.issues.length ? 'text-amber-600' : 'text-slate-400'} />
           </div>
+          {pre.rent > 0 && getDeal() === 'sale' && <div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900"><span className="num font-semibold">{pre.rent}</span> מהלקוחות מסומנים "להשכרה" ויישמרו בלשונית השכרה.</div>}
+          {pre.rent < pre.valid && getDeal() === 'rent' && <div className="rounded-xl bg-brand-50 p-3 text-sm text-brand-900"><span className="num font-semibold">{pre.valid - pre.rent}</span> מהלקוחות מסומנים "למכירה" ויישמרו בלשונית מכירה.</div>}
           {pre.checks?.length > 0 && (
             <div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
               <div className="flex items-center gap-2 font-medium"><AlertTriangle className="size-4" />כדאי לבדוק {pre.checks.length === 1 ? 'מודעה אחת' : <><span className="num">{pre.checks.length}</span> מודעות</>} (ייובאו בכל מקרה)</div>

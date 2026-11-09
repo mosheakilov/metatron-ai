@@ -50,6 +50,7 @@ PRICE = [
     (re.compile(rf"(?:מחיר\s*:?\s*)?({_NUM})\s*(?:מיליון|מליון|מיל['׳]?)(?:\s*(?:₪|ש[\"״]?ח))?"),
      1_000_000),
     (re.compile(rf"(?:מחיר\s*:?\s*)?({_NUM})\s*(?:אלף|K|k)(?![א-ת])(?:\s*(?:₪|ש[\"״]?ח))?"), 1000),
+    (re.compile(r"(?:שכירות|שכ[\"״]ד|שכר דירה)\s*:?\s*(\d[\d,.]*)"), 1),
     (re.compile(r"(?:מחיר\s*:?\s*)?₪\s*(\d[\d,.]*)"), 1),
     (re.compile(r"(?:מחיר\s*:?\s*)?(\d[\d,.]*)\s*(?:₪|ש[\"״]?ח|שקל(?:ים)?)"), 1),
     (re.compile(r"מחיר\s*:?\s*(\d[\d,.]*)"), 1),
@@ -80,7 +81,8 @@ def price_of(text: str) -> tuple[int | None, str]:
             value = float(raw.replace(",", "").rstrip("."))
         else:
             value = float(raw.replace(",", ".")) * mult
-        if value >= 10_000:
+        # a sum with ₪ or "שכירות" may be a monthly rent; a bare number must look like a price
+        if value >= (500 if rx.pattern.find("₪") >= 0 or "שכ" in rx.pattern else 10_000):
             return int(value), text[:m.start()] + " , " + text[m.end():]
     return None, text
 

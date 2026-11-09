@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Check, ImagePlus, LogOut, Pause, Play, Trash2 } from 'lucide-react'
-import { api, mediaUrl, type AppState, type SettingsT } from '../api'
+import { api, DEAL_HE, getDeal, mediaUrl, type AppState, type Deal, type SettingsT } from '../api'
 import { Availability } from '../components/Availability'
 import { WhatsAppConnect } from '../components/WhatsAppConnect'
 import { Button, Card, cx, Field, inputCls, PageHeader, Toggle, useToast } from '../ui'
@@ -8,6 +8,9 @@ import { Button, Card, cx, Field, inputCls, PageHeader, Toggle, useToast } from 
 export function Settings({ state, onSaved }: { state: AppState; onSaved: () => void }) {
   const [s, setS] = useState<SettingsT>(state.settings)
   const [busy, setBusy] = useState(false)
+  const [tdeal, setTdeal] = useState<Deal>(getDeal)
+  const tKey = tdeal === 'rent' ? 'message_template_rent' : 'message_template'
+  const iKey = tdeal === 'rent' ? 'outreach_image_rent' : 'outreach_image'
   const toast = useToast()
   const dirty = JSON.stringify(s) !== JSON.stringify(state.settings)
   const lim = s.limits
@@ -60,11 +63,19 @@ export function Settings({ state, onSaved }: { state: AppState; onSaved: () => v
           </div>
         </Section>
 
-        <Section title="הודעת פתיחה" sub="הבסיס להודעה הראשונה לכל מוכר. כשהבינה המלאכותית מחוברת, היא מתאימה את הנוסח לכל מוכר ושומרת על הכוונה שלך.">
-          <TemplateEditor value={s.message_template} onChange={(message_template) => setS({ ...s, message_template })}
-            optOut={s.include_opt_out} image={s.outreach_image} />
+        <Section title="הודעת פתיחה" sub="הבסיס להודעה הראשונה לכל לקוח. למכירה ולהשכרה יש נוסח ותמונה נפרדים. כשהבינה המלאכותית מחוברת, היא מתאימה את הנוסח לכל לקוח ושומרת על הכוונה שלך.">
+          <div className="mb-4 inline-grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
+            {(['sale', 'rent'] as const).map((d) => (
+              <button key={d} type="button" onClick={() => setTdeal(d)}
+                className={cx('rounded-lg px-5 py-1.5 text-sm font-medium transition', tdeal === d ? 'bg-white shadow-sm' : 'text-muted')}>
+                הודעה ל{DEAL_HE[d]}
+              </button>
+            ))}
+          </div>
+          <TemplateEditor key={tdeal} deal={tdeal} value={s[tKey]} onChange={(v) => setS({ ...s, [tKey]: v })}
+            optOut={s.include_opt_out} image={s[iKey]} />
           <div className="mt-5 grid gap-5 lg:grid-cols-2">
-            <ImagePicker image={s.outreach_image} onChange={(outreach_image) => { setS((cur) => ({ ...cur, outreach_image })); onSaved() }} />
+            <ImagePicker key={tdeal} deal={tdeal} image={s[iKey]} onChange={(v) => { setS((cur) => ({ ...cur, [iKey]: v })); onSaved() }} />
             <div>
               <Checkbox checked={s.include_opt_out} onChange={(include_opt_out) => setS({ ...s, include_opt_out })}
                 label='להוסיף בסוף כל הודעה: להסרה השיבו "הסר".' />
@@ -125,7 +136,9 @@ function Checkbox({ checked, onChange, label }: { checked: boolean; onChange: (v
   )
 }
 
-function ImagePicker({ image, onChange }: { image: string; onChange: (name: string) => void }) {
+function ImagePicker({ image, onChange, deal }: { image: string; onChange: (name: string) => void; deal: Deal }) {
+  const key = deal === 'rent' ? 'outreach_image_rent' : 'outreach_image'
+  const headers = { 'x-deal': deal }
   const input = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const toast = useToast()
@@ -135,8 +148,8 @@ function ImagePicker({ image, onChange }: { image: string; onChange: (name: stri
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const r = await api<SettingsT>('/api/media/outreach', { method: 'POST', body: fd })
-      onChange(r.outreach_image)
+      const r = await api<SettingsT>('/api/media/outreach', { method: 'POST', body: fd, headers })
+      onChange(r[key])
       toast('התמונה תצורף להודעות הראשונות מעכשיו')
     } catch (e) { toast((e as Error).message, 'err') } finally {
       setBusy(false)
@@ -144,13 +157,13 @@ function ImagePicker({ image, onChange }: { image: string; onChange: (name: stri
     }
   }
   const remove = async () => {
-    const r = await api<SettingsT>('/api/media/outreach', { method: 'DELETE' })
-    onChange(r.outreach_image)
+    const r = await api<SettingsT>('/api/media/outreach', { method: 'DELETE', headers })
+    onChange(r[key])
     toast('ההודעות הראשונות יישלחו בלי תמונה')
   }
   return (
     <div>
-      <div className="text-sm font-medium mb-1.5">תמונה עם ההודעה הראשונה (לא חובה)</div>
+      <div className="text-sm font-medium mb-1.5">תמונה עם ההודעה הראשונה ל{DEAL_HE[deal]} (לא חובה)</div>
       <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
       {image ? (
         <div className="flex items-center gap-3">
@@ -187,12 +200,12 @@ function Section({ title, sub, children }: { title: string; sub?: string; childr
 
 const PLACEHOLDERS: [string, string][] = [['{שם}', 'שם פרטי'], ['{נכס}', 'הנכס והכתובת'], ['{עיר}', 'עיר'], ['{חדרים}', 'מספר חדרים'], ['{שכונה}', 'שכונה'], ['{חתימה}', 'השם והמשרד']]
 
-function TemplateEditor({ value, onChange, optOut, image }: { value: string; onChange: (v: string) => void; optOut: boolean; image: string }) {
+function TemplateEditor({ value, onChange, optOut, image, deal }: { value: string; onChange: (v: string) => void; optOut: boolean; image: string; deal: Deal }) {
   const [preview, setPreview] = useState<{ text: string; seller: string } | null>(null)
   useEffect(() => {
-    const t = setTimeout(() => api<{ text: string; seller: string }>('/api/template/preview', { method: 'POST', json: { body: value, include_opt_out: optOut } }).then(setPreview).catch(() => {}), 300)
+    const t = setTimeout(() => api<{ text: string; seller: string }>('/api/template/preview', { method: 'POST', json: { body: value, include_opt_out: optOut }, headers: { 'x-deal': deal } }).then(setPreview).catch(() => {}), 300)
     return () => clearTimeout(t)
-  }, [value, optOut])
+  }, [value, optOut, deal])
   return (
     <div className="grid gap-4 xl:grid-cols-2">
       <div>

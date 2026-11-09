@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { CalendarDays, Inbox, LayoutDashboard, MessagesSquare, Settings, Users } from 'lucide-react'
-import type { AppState } from './api'
+import { CalendarDays, Inbox, KeyRound, LayoutDashboard, MessagesSquare, Settings, Tag, Users } from 'lucide-react'
+import { DEAL_HE, type AppState, type Deal } from './api'
 import { cx } from './ui'
 
 export type Page = 'home' | 'contacts' | 'queue' | 'chats' | 'meetings' | 'settings'
@@ -23,15 +23,37 @@ const NAV: { id: Page; label: string; icon: typeof Users }[] = [
   { id: 'settings', label: 'הגדרות', icon: Settings },
 ]
 
-export function Shell({ page, go, state, badges, children }: {
-  page: Page; go: (p: Page) => void; state: AppState; badges: Partial<Record<Page, number>>; children: ReactNode
+/** Sales and rentals work the same way; the switch decides which clients every screen shows. */
+function DealSwitch({ deal, onDeal, dark }: { deal: Deal; onDeal: (d: Deal) => void; dark?: boolean }) {
+  return (
+    <div role="tablist" aria-label="סוג עסקה" className={cx('grid grid-cols-2 gap-1 rounded-xl p-1', dark ? 'bg-white/8' : 'bg-slate-100')}>
+      {(['sale', 'rent'] as const).map((d) => {
+        const Icon = d === 'sale' ? Tag : KeyRound
+        const on = deal === d
+        return (
+          <button key={d} role="tab" aria-selected={on} onClick={() => onDeal(d)}
+            className={cx('flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition',
+              on ? (d === 'sale' ? 'bg-white text-brand-800 shadow-sm' : 'bg-emerald-400 text-emerald-950 shadow-sm')
+                : dark ? 'text-indigo-200/80 hover:text-white' : 'text-muted')}>
+            <Icon className="size-4" />{DEAL_HE[d]}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+export function Shell({ page, go, state, badges, deal, onDeal, children }: {
+  page: Page; go: (p: Page) => void; state: AppState; badges: Partial<Record<Page, number>>
+  deal: Deal; onDeal: (d: Deal) => void; children: ReactNode
 }) {
   const wa = state.whatsapp
   const waOk = wa.status === 'open'
   return (
     <div className="flex h-full">
       <aside className="hidden md:flex w-64 shrink-0 flex-col bg-brand-900 text-indigo-100">
-        <div className="px-5 pt-6 pb-8"><Logo light /></div>
+        <div className="px-5 pt-6 pb-5"><Logo light /></div>
+        <div className="px-3 pb-5"><DealSwitch deal={deal} onDeal={onDeal} dark /></div>
         <nav className="flex-1 space-y-1 px-3">
           {NAV.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => go(id)}
@@ -55,7 +77,7 @@ export function Shell({ page, go, state, badges, children }: {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="md:hidden flex items-center justify-between bg-brand-900 px-4 py-3"><Logo light /></header>
+        <header className="md:hidden flex items-center justify-between gap-3 bg-brand-900 px-4 py-3"><Logo light /><div className="w-44"><DealSwitch deal={deal} onDeal={onDeal} dark /></div></header>
         <main className="flex-1 overflow-y-auto scroll-thin">
           <div className="mx-auto max-w-6xl px-4 sm:px-8 py-8 pb-24 md:pb-8">{children}</div>
         </main>

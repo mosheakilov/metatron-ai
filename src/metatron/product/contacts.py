@@ -199,7 +199,8 @@ def _cell_kind(c: str) -> str:
         return "deal"
     if PROPERTY.match(re.sub(r"\s+", " ", c)):
         return "ptype"
-    if re.search(r"₪|ש[\"״]?ח|מיליון|מליון|אלף", c) and details.price_of(c)[0]:
+    if re.search(r"₪|ש[\"״]?ח", c) and re.search(r"\d", c) or (
+            re.search(r"מיליון|מליון|אלף", c) and details.price_of(c)[0]):
         return "price"
     if re.fullmatch(r"\d{1,3}(?:,\d{3}){2,}", c):
         return "price"
@@ -338,8 +339,18 @@ def valid_phone(phone: str) -> bool:
     return 10 <= len(d) <= 15
 
 
+def deal_code(text: str | None, default: str = "sale") -> str:
+    """"להשכרה" -> "rent", "למכירה" -> "sale"; nothing -> the tab the broker imports into."""
+    t = (text or "").strip()
+    if re.search(r"השכר|שכירות|rent|let", t, re.I):
+        return "rent"
+    if re.search(r"מכיר|sale|sell", t, re.I):
+        return "sale"
+    return default
+
+
 def prepare(headers: list[str], rows: list[list[str]], mapping: dict[str, int | None],
-            store: Store) -> dict:
+            store: Store, deal: str = "sale") -> dict:
     """Map rows to contacts and report problems, without saving anything."""
     missing = [f for f in REQUIRED if mapping.get(f) is None]
     if missing:
@@ -371,7 +382,8 @@ def prepare(headers: list[str], rows: list[list[str]], mapping: dict[str, int | 
             "asking_price": details.price_of(rec.get("asking_price") or "")[0]
             or _number(rec.get("asking_price") or ""),
             **{f: (rec.get(f) or "").strip() or None
-               for f in ("deal_type", "property_type", "neighborhood", "listing_ref")},
+               for f in ("property_type", "neighborhood", "listing_ref")},
+            "deal_type": deal_code(rec.get("deal_type"), deal),
             "listed_on": _date(rec.get("listed_on") or ""),
             "existing_status": existing["status"] if existing else None,
         }
@@ -403,9 +415,10 @@ def _date(text: str) -> str | None:
 def _suspicious(c: dict) -> str | None:
     """Values that look like a typo in the ad. The client is still imported, only flagged."""
     price, area = c.get("asking_price"), c.get("area_sqm")
-    sale = (c.get("deal_type") or "למכירה") in ("למכירה", "מכירה")
-    if price and sale and price < 200_000:
+    if price and c.get("deal_type") != "rent" and price < 200_000:
         return f"מחיר {price:,.0f} ₪ נראה נמוך מדי למכירה"
+    if price and c.get("deal_type") == "rent" and not 500 <= price <= 100_000:
+        return f"שכירות של {price:,.0f} ₪ בחודש נראית לא סבירה"
     if area and area > 1000 and "מגרש" not in (c.get("property_type") or ""):
         return f"שטח {area:,.0f} מ\"ר נראה גדול מדי"
     rooms = c.get("rooms")

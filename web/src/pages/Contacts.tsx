@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Search, Sparkles, Trash2, Upload, Users } from 'lucide-react'
-import { api, fmtPhone, money, propertyLine, usePoll, type AppState, type Seller } from '../api'
+import { api, DEAL_HE, fmtPhone, getDeal, money, propertyLine, usePoll, type AppState, type Seller } from '../api'
 import { ImportWizard } from '../components/ImportWizard'
 import type { Page } from '../shell'
 import { Button, Card, cx, Empty, inputCls, Modal, PageHeader, Spinner, StatusBadge, useToast } from '../ui'
@@ -15,7 +15,9 @@ export function Contacts({ state, go }: { state: AppState; go: (p: Page) => void
   const [importing, setImporting] = useState(false)
   const [busy, setBusy] = useState(false)
   const toast = useToast()
-  const { data, reload } = usePoll<{ contacts: Seller[]; total: number }>('/api/contacts', 10000)
+  const { data, reload } = usePoll<{ contacts: Seller[]; total: number; other: number }>('/api/contacts', 10000)
+  const deal = getDeal()
+  const who = deal === 'rent' ? 'משכירים' : 'מוכרים'
   const labels = state.status_labels
 
   const rows = useMemo(() => (data?.contacts || []).filter((c) =>
@@ -54,11 +56,11 @@ export function Contacts({ state, go }: { state: AppState; go: (p: Page) => void
 
   return (
     <div>
-      <PageHeader title="לקוחות" sub={data ? <><span className="num">{data.total}</span> מוכרים ברשימה</> : undefined}
+      <PageHeader title={`לקוחות ל${DEAL_HE[deal]}`} sub={data ? <><span className="num">{data.total}</span> {who} ברשימה{data.other > 0 && <span className="text-muted"> · עוד <span className="num">{data.other}</span> ב{DEAL_HE[deal === 'rent' ? 'sale' : 'rent']}</span>}</> : undefined}
         actions={<Button variant="secondary" icon={<Upload className="size-4" />} onClick={() => setImporting(true)}>ייבוא רשימה</Button>} />
 
       {!data ? <div className="grid place-items-center py-24"><Spinner /></div> : data.total === 0 ? (
-        <Card><Empty icon={<Users />} title="הרשימה ריקה" sub="ייבאו קובץ Excel או CSV עם שמות וטלפונים של מוכרים." action={<Button icon={<Upload className="size-4" />} onClick={() => setImporting(true)}>ייבוא רשימה</Button>} /></Card>
+        <Card><Empty icon={<Users />} title={`אין עדיין לקוחות ל${DEAL_HE[deal]}`} sub={`ייבאו קובץ או הדביקו רשימה של ${who}. רשימה שמסומן בה "להשכרה" או "למכירה" תיכנס ללשונית הנכונה בכל מקרה.`} action={<Button icon={<Upload className="size-4" />} onClick={() => setImporting(true)}>ייבוא רשימה</Button>} /></Card>
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -130,7 +132,7 @@ export function Contacts({ state, go }: { state: AppState; go: (p: Page) => void
         </div>
       </Modal>
 
-      <Modal open={importing} onClose={() => setImporting(false)} title="ייבוא רשימת לקוחות" wide>
+      <Modal open={importing} onClose={() => setImporting(false)} title={`ייבוא לקוחות ל${DEAL_HE[deal]}`} wide>
         <ImportWizard onDone={(r) => { toast(`${r.saved} לקוחות נשמרו (${r.new} חדשים)`); setImporting(false); reload() }} />
       </Modal>
     </div>

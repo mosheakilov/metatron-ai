@@ -28,8 +28,23 @@ def opt_out_enabled(cfg: Config | None) -> bool:
     return cfg is None or bool(cfg["outreach"].get("include_opt_out", True))
 
 
-def _system(cfg: Config) -> str:
-    return SYSTEM if opt_out_enabled(cfg) else SYSTEM.split("Always end with")[0] + NO_OPT_OUT
+RENT = ("This seller is a landlord offering the property for RENT, not for sale: talk about "
+        "renting it out and finding good tenants, never about selling.")
+
+
+def is_rent(seller: dict | None) -> bool:
+    return (seller or {}).get("deal_type") == "rent"
+
+
+def _system(cfg: Config, seller: dict | None = None) -> str:
+    base = SYSTEM if opt_out_enabled(cfg) else SYSTEM.split("Always end with")[0] + NO_OPT_OUT
+    return base + (" " + RENT if is_rent(seller) else "")
+
+
+def template_for(seller: dict | None, cfg: Config) -> str | None:
+    """The broker's opening message for this seller's deal (sale or rent)."""
+    o = cfg["outreach"]
+    return (o.get("template_rent") if is_rent(seller) else None) or o.get("template")
 
 
 def _signature(cfg: Config) -> str:
@@ -75,8 +90,8 @@ def render_template(template: str, seller: dict, cfg: Config) -> str:
 
 
 def template_outreach(seller: dict, cfg: Config) -> str:
-    if cfg["outreach"].get("template"):
-        return render_template(cfg["outreach"]["template"], seller, cfg)
+    if template := template_for(seller, cfg):
+        return render_template(template, seller, cfg)
     first = (seller.get("name") or "").split(" ")[0]
     rooms = seller.get("rooms")
     rooms_txt = f"{rooms:g} חדרים" if isinstance(rooms, int | float) else "הדירה"
@@ -106,11 +121,11 @@ def draft_outreach(seller: dict, cfg: Config, llm=None) -> str:
                                          "days_on_market", "price_drops", "property_type",
                                          "neighborhood", "floor", "floors_total", "area_sqm")
              if seller.get(k) not in (None, "")}
-    guide = cfg["outreach"].get("template")
+    guide = template_for(seller, cfg)
     style = (f"The broker's own template (keep its intent and facts, personalise it, and never "
              f"claim you saw an ad unless the notes say so):\n{render_template(guide, seller, cfg)}\n"
              if guide else "")
-    prompt = (f"{_system(cfg)}\n\nSeller facts: {facts}\nBroker notes: {seller.get('notes') or '-'}\n"
+    prompt = (f"{_system(cfg, seller)}\n\nSeller facts: {facts}\nBroker notes: {seller.get('notes') or '-'}\n"
               f"{style}Sign the message as: {_signature(cfg)}\nReturn only the message text.")
     try:
         return _ensure_opt_out(llm.call(messages=[{"role": "user", "content": prompt}]), cfg)
@@ -118,12 +133,13 @@ def draft_outreach(seller: dict, cfg: Config, llm=None) -> str:
         return template_outreach(seller, cfg)
 
 
-def draft_answer(question: str, history: list[dict], cfg: Config, llm=None) -> str:
+def draft_answer(question: str, history: list[dict], cfg: Config, llm=None,
+                 seller: dict | None = None) -> str:
     if llm is None:
         return template_answer(question, cfg)
     convo = "\n".join(f"{'Seller' if m['direction'] == 'in' else 'Broker'}: {m['body']}"
                       for m in history[-8:])
-    prompt = (f"{_system(cfg)}\n\nConversation so far:\n{convo}\n\nThe seller asked: {question}\n"
+    prompt = (f"{_system(cfg, seller)}\n\nConversation so far:\n{convo}\n\nThe seller asked: {question}\n"
               "Answer briefly and honestly. If it is about commission or price, say the broker "
               "will explain at the meeting. Offer to propose meeting times.\n"
               f"Sign as: {_signature(cfg)}\nReturn only the message text.")

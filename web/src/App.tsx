@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { usePoll, type AppState } from './api'
+import { api, getDeal, setDeal, usePoll, type AppState, type Deal } from './api'
 import { Contacts } from './pages/Contacts'
 import { Conversations } from './pages/Conversations'
 import { Home } from './pages/Home'
@@ -18,6 +18,8 @@ export default function App() {
   const { data: state, error, reload } = usePoll<AppState>('/api/state', 4000)
   const [page, setPage] = useState<Page>(fromHash)
   const [queueCount, setQueueCount] = useState(0)
+  const [deal, setDealState] = useState<Deal>(getDeal)
+  const switchDeal = (d: Deal) => { setDeal(d); setDealState(d) }
 
   useEffect(() => {
     const h = () => setPage(fromHash())
@@ -26,8 +28,8 @@ export default function App() {
   }, [])
   useEffect(() => {
     if (!state?.settings.setup_done) return
-    fetch('/api/queue').then((r) => r.json()).then((d) => setQueueCount(d.drafts.length)).catch(() => {})
-  }, [state])
+    api<{ drafts: unknown[] }>('/api/queue').then((d) => setQueueCount(d.drafts.length)).catch(() => {})
+  }, [state, deal])
   const go = (p: Page) => { location.hash = p }
 
   if (!state) {
@@ -44,12 +46,12 @@ export default function App() {
   return (
     <ToastProvider>
       {!state.settings.setup_done ? <Onboarding settings={state.settings} onFinish={() => { reload(); go('home') }} /> : (
-        <Shell page={page} go={go} state={state} badges={{ queue: queueCount }}>
-          {page === 'home' && <Home state={state} go={go} />}
-          {page === 'contacts' && <Contacts state={state} go={go} />}
-          {page === 'queue' && <Queue state={state} go={go} />}
-          {page === 'chats' && <Conversations state={state} />}
-          {page === 'meetings' && <Meetings />}
+        <Shell page={page} go={go} state={state} badges={{ queue: queueCount }} deal={deal} onDeal={switchDeal}>
+          {page === 'home' && <Home key={deal} state={state} go={go} />}
+          {page === 'contacts' && <Contacts key={deal} state={state} go={go} />}
+          {page === 'queue' && <Queue key={deal} state={state} go={go} />}
+          {page === 'chats' && <Conversations key={deal} state={state} />}
+          {page === 'meetings' && <Meetings key={deal} />}
           {page === 'settings' && <Settings key={JSON.stringify(state.settings)} state={state} onSaved={reload} />}
         </Shell>
       )}

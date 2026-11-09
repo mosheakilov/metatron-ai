@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+/** The dashboard runs sales and rentals side by side; every request says which tab is open. */
+export type Deal = 'sale' | 'rent'
+export const DEAL_HE: Record<Deal, string> = { sale: 'מכירה', rent: 'השכרה' }
+let currentDeal: Deal = (() => { try { return localStorage.getItem('deal') === 'rent' ? 'rent' : 'sale' } catch { return 'sale' } })()
+export const getDeal = () => currentDeal
+export function setDeal(d: Deal) {
+  currentDeal = d
+  try { localStorage.setItem('deal', d) } catch { /* private window: the tab is not remembered */ }
+}
+
 export type Seller = {
   seller_id: string; name: string; phone: string; city: string | null; address: string | null
   rooms: number | null; area_sqm: number | null; asking_price: number | null; notes: string | null
@@ -28,7 +38,7 @@ export type WhatsApp = {
 export type Limits = { daily_new: number; start_hour: number; end_hour: number; min_gap_sec: number; max_gap_sec: number; send_on_weekend: boolean }
 export type SettingsT = {
   setup_done: boolean; broker_name: string; wa_phone: string; office_name: string; meeting_minutes: number; message_template: string
-  include_opt_out: boolean; outreach_image: string
+  include_opt_out: boolean; outreach_image: string; message_template_rent: string; outreach_image_rent: string
   availability: { weekdays: number[]; hours: number[]; days_ahead: number }
   limits: Limits; paused: boolean; ai: { proxy_url: string; license_key: string }
 }
@@ -44,7 +54,7 @@ export async function api<T = unknown>(path: string, init?: RequestInit & { json
   const { json, ...rest } = init || {}
   const r = await fetch(path, {
     ...rest,
-    headers: json !== undefined ? { 'content-type': 'application/json' } : rest.headers,
+    headers: { 'x-deal': currentDeal, ...(json !== undefined ? { 'content-type': 'application/json' } : {}), ...(rest.headers as Record<string, string> | undefined) },
     body: json !== undefined ? JSON.stringify(json) : rest.body,
   })
   const data = await r.json().catch(() => ({}))
