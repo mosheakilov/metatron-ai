@@ -496,11 +496,11 @@ def test_paste_excel_cells_without_header_maps_property_columns(api):
 
 
 def test_paste_labelled_lines_phone_first_and_sentences(api):
-    pre, got = paste(api, "שם: משה כהן\nעיר: חיפה\nטלפון: 054-7009025\nכתובת: הנשיא 10\n"
+    pre, got = paste(api, "שם: משה כהן\nעיר: חיפה\nטלפון: 054-0000025\nכתובת: הנשיא 10\n"
                           "חדרים: 4\nמחיר: 2,500,000\nהערות: קומה 3\n"
                           "0521234567 דני לוי, נתניה, 3 חדרים\n"
                           "רות 0539876543 מוכרת דירת 5 חדרים ברחוב הרצל 5 בתל אביב ב-2.5 מיליון")
-    m, d, r = got["972547009025"], got["972521234567"], got["972539876543"]
+    m, d, r = got["972540000025"], got["972521234567"], got["972539876543"]
     assert (m["name"], m["city"], m["address"], m["rooms"], m["asking_price"], m["notes"]) == (
         "משה כהן", "חיפה", "הנשיא 10", 4, 2500000, "קומה 3")
     assert (d["name"], d["city"], d["rooms"]) == ("דני לוי", "נתניה", 3)

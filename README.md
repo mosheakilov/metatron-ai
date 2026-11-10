@@ -9,6 +9,18 @@ No voice calls.
 
 > Final project for the AI course. Planning docs (Hebrew, Obsidian vault): [`docs/00 - MOC.md`](docs/00%20-%20MOC.md)
 
+## Install the product (Windows)
+
+1. Download `METATRON-Setup-1.1.0.exe` from the [latest release](../../releases/latest).
+2. Run it. The installer is not code-signed yet, so Windows SmartScreen warns: click
+   **More info → Run anyway**. No admin rights are needed.
+3. METATRON opens in the browser at http://127.0.0.1:8765. Link WhatsApp with the QR code, or skip
+   it and explore with pasted clients (use fake numbers).
+
+Without an AI key the messages are written from the broker's template; everything else works.
+The installed product's code is in `src/metatron/product/`, `web/`, `gateway/`, `relay/` and
+`installer/` (branch `product/01-local-app`).
+
 ## Quick start
 
 ```bash
