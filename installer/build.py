@@ -23,7 +23,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BUILD = ROOT / "build" / "app"
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 
 # What the installed product needs (the course's training stack - pandas, scikit-learn,
 # matplotlib - is not shipped: the product does not train models).
